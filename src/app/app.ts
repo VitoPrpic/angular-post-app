@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, ElementRef, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Post, PostCard } from './post-card/post-card';
@@ -36,14 +37,16 @@ const STARTER_POSTS: Post[] = [
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, PostCard],
+  imports: [DatePipe, FormsModule, PostCard],
   styleUrl: './app.scss',
   templateUrl: './app.html',
 })
 export class App {
   @ViewChild('imageInput') private imageInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('postDialog') private postDialog?: ElementRef<HTMLDialogElement>;
 
   protected readonly posts = signal<Post[]>(this.loadPosts());
+  protected readonly selectedPost = signal<Post | null>(null);
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
   protected readonly isProcessingImage = signal(false);
@@ -95,6 +98,24 @@ export class App {
 
     this.posts.set(nextPosts);
     this.successMessage.set('Post je uklonjen.');
+  }
+
+  protected openPost(post: Post): void {
+    this.selectedPost.set(post);
+
+    if (this.postDialog && !this.postDialog.nativeElement.open) {
+      this.postDialog.nativeElement.showModal();
+    }
+  }
+
+  protected closePost(): void {
+    this.postDialog?.nativeElement.close();
+  }
+
+  protected closePostFromBackdrop(event: MouseEvent): void {
+    if (event.target === this.postDialog?.nativeElement) {
+      this.closePost();
+    }
   }
 
   protected async selectImage(event: Event): Promise<void> {

@@ -20,5 +20,6 @@ export interface Post {
 })
 export class PostCard {
   @Input({ required: true }) post!: Post;
+  @Output() openPost = new EventEmitter<Post>();
   @Output() removePost = new EventEmitter<string>();
 }

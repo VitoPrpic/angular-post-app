@@ -429,6 +429,196 @@ select {
   margin-top: 1rem;
 }
 
+.post-dialog {
+  background: var(--paper);
+  border: 0;
+  color: var(--ink);
+  height: min(92dvh, 900px);
+  margin: auto;
+  max-height: none;
+  max-width: none;
+  padding: 0;
+  width: min(1180px, calc(100vw - 3rem));
+}
+
+.post-dialog[open] {
+  animation: post-dialog-in 240ms ease-out;
+}
+
+.post-dialog::backdrop {
+  background: rgba(14, 14, 12, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.post-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.post-detail-toolbar {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+}
+
+.post-detail-toolbar > span {
+  color: var(--soft-ink);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.post-detail-toolbar button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  font-size: 0.67rem;
+  font-weight: 750;
+  gap: 0.7rem;
+  letter-spacing: 0.1em;
+  padding: 0.25rem;
+  text-transform: uppercase;
+}
+
+.post-detail-toolbar button span:last-child {
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 0.7;
+}
+
+.post-detail-toolbar button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent), transparent 55%);
+  outline-offset: 4px;
+}
+
+.post-detail-layout {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  min-height: 0;
+}
+
+.post-detail-media,
+.post-detail-placeholder {
+  min-height: 0;
+}
+
+.post-detail-media img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.post-detail-placeholder {
+  align-items: flex-start;
+  display: flex;
+  font-family: var(--serif);
+  font-size: clamp(2rem, 5vw, 4rem);
+  justify-content: space-between;
+  padding: clamp(2rem, 5vw, 4rem);
+}
+
+.post-detail-placeholder span:first-child {
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  display: inline-flex;
+  font-size: 0.55em;
+  height: 4.5rem;
+  justify-content: center;
+  width: 4.5rem;
+}
+
+.post-detail-placeholder.coral {
+  background: #ef7b5c;
+  color: #5d1d0d;
+}
+
+.post-detail-placeholder.sage {
+  background: #9fb49b;
+  color: #253326;
+}
+
+.post-detail-placeholder.sky {
+  background: #9ebbc4;
+  color: #1d3339;
+}
+
+.post-detail-placeholder.sand {
+  background: #d7bb83;
+  color: #473514;
+}
+
+.post-detail-content {
+  overflow-y: auto;
+  padding: clamp(2rem, 5vw, 5rem);
+}
+
+.post-detail-meta {
+  color: var(--soft-ink);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.68rem;
+  font-weight: 700;
+  gap: 0.5rem 1.2rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.post-detail-meta span + span::before {
+  content: '•';
+  margin-right: 1.2rem;
+}
+
+.post-detail-content h2 {
+  font-size: clamp(2.7rem, 5vw, 5rem);
+  line-height: 0.95;
+  margin: clamp(2rem, 5vw, 4rem) 0 2rem;
+}
+
+.post-detail-content p {
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.8;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.post-detail-content p::first-letter {
+  color: var(--accent);
+  float: left;
+  font-size: 3.6em;
+  line-height: 0.75;
+  padding: 0.16em 0.12em 0 0;
+}
+
+.post-detail-end {
+  color: var(--accent);
+  font-size: 1.15rem;
+  margin-top: 3rem;
+}
+
+@keyframes post-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 footer {
   color: var(--muted);
   display: flex;
@@ -481,6 +671,30 @@ footer span:first-child {
 
   .posts-grid {
     grid-template-columns: 1fr;
+  }
+
+  .post-dialog {
+    height: 100dvh;
+    width: 100vw;
+  }
+
+  .post-detail-layout {
+    display: block;
+    overflow-y: auto;
+  }
+
+  .post-detail-media,
+  .post-detail-placeholder {
+    height: 42dvh;
+  }
+
+  .post-detail-content {
+    overflow: visible;
+    padding: 2.25rem 1.25rem 4rem;
+  }
+
+  .post-detail-meta span + span::before {
+    margin-right: 0.5rem;
   }
 
   footer {

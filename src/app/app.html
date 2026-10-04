@@ -43,13 +43,13 @@
           id="post-excerpt"
           name="excerpt"
           rows="6"
-          maxlength="360"
-          placeholder="Napiši kratki sadržaj posta…"
+          maxlength="3000"
+          placeholder="Napiši sadržaj posta…"
           [(ngModel)]="draft.excerpt"
           (input)="clearMessage()"
           required
         ></textarea>
-        <div class="field-meta"><span>Kratki sažetak</span><span>{{ draft.excerpt.length }}/360</span></div>
+        <div class="field-meta"><span>Sadržaj posta</span><span>{{ draft.excerpt.length }}/3000</span></div>
 
         <label for="post-category">Kategorija</label>
         <div class="select-wrap">
@@ -119,7 +119,11 @@
       @if (posts().length) {
         <div class="posts-grid">
           @for (post of posts(); track post.id) {
-            <app-post-card [post]="post" (removePost)="removePost($event)" />
+            <app-post-card
+              [post]="post"
+              (openPost)="openPost($event)"
+              (removePost)="removePost($event)"
+            />
           }
         </div>
       } @else {
@@ -133,6 +137,50 @@
     </section>
   </div>
 </main>
+
+<dialog
+  #postDialog
+  class="post-dialog"
+  aria-labelledby="post-dialog-title"
+  (click)="closePostFromBackdrop($event)"
+  (close)="selectedPost.set(null)"
+>
+  @if (selectedPost(); as post) {
+    <article class="post-detail">
+      <div class="post-detail-toolbar">
+        <span>Postovi / {{ post.category }}</span>
+        <button type="button" (click)="closePost()" aria-label="Zatvori post">
+          <span>Zatvori</span>
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+
+      <div class="post-detail-layout" [class.without-image]="!post.imageDataUrl">
+        @if (post.imageDataUrl) {
+          <div class="post-detail-media">
+            <img [src]="post.imageDataUrl" [alt]="'Naslovna slika za ' + post.title" />
+          </div>
+        } @else {
+          <div class="post-detail-placeholder" [class]="'post-detail-placeholder ' + post.accent" aria-hidden="true">
+            <span>{{ post.category.charAt(0) }}</span>
+            <span>✦</span>
+          </div>
+        }
+
+        <div class="post-detail-content">
+          <div class="post-detail-meta">
+            <span>{{ post.category }}</span>
+            <span>{{ post.publishedAt | date: 'dd.MM.yyyy.' }}</span>
+            <span>{{ post.readingTime }} min čitanja</span>
+          </div>
+          <h2 id="post-dialog-title">{{ post.title }}</h2>
+          <p>{{ post.excerpt }}</p>
+          <div class="post-detail-end" aria-hidden="true">✦</div>
+        </div>
+      </div>
+    </article>
+  }
+</dialog>
 
 <footer>
   <span>Postovi</span>

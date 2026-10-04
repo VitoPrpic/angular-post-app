@@ -1,6 +1,7 @@
 .post-card {
   background: rgba(255, 255, 255, 0.25);
   border: 1px solid var(--line);
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   min-height: 430px;
@@ -117,9 +118,13 @@ h3 {
 
 p {
   color: var(--muted);
+  display: -webkit-box;
   font-size: 0.9rem;
   line-height: 1.65;
   margin: 0 0 2rem;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
 }
 
 .card-footer {
@@ -144,6 +149,21 @@ button {
 button:hover {
   color: #a23b2a;
   text-decoration-color: currentColor;
+}
+
+.card-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.8rem;
+}
+
+.read-button {
+  color: var(--ink);
+  text-decoration-color: currentColor;
+}
+
+.remove-button {
+  color: var(--soft-ink);
 }
 
 button:focus-visible {

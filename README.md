@@ -19,6 +19,7 @@ Zatim otvori `http://localhost:4200`.
 - reusable `PostCard` komponenta
 - pregled, smanjivanje i lokalno spremanje JPG, PNG i WebP slika
 - automatski datum i procjena vremena čitanja
+- otvaranje cijelog posta klikom na karticu
 - dodavanje i uklanjanje kartica
 - lokalno spremanje postova
 - responzivan prikaz za mobitel i računalo

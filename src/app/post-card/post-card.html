@@ -1,4 +1,4 @@
-<article class="post-card" [class]="'post-card ' + post.accent">
+<article class="post-card" [class]="'post-card ' + post.accent" (click)="openPost.emit(post)">
   @if (post.imageDataUrl) {
     <div class="card-media">
       <img [src]="post.imageDataUrl" [alt]="'Naslovna slika za ' + post.title" />
@@ -22,9 +22,17 @@
 
     <div class="card-footer">
       <span>{{ post.readingTime }} min čitanja</span>
-      <button type="button" (click)="removePost.emit(post.id)" [attr.aria-label]="'Ukloni post ' + post.title">
-        Ukloni
-      </button>
+      <div class="card-actions">
+        <button class="read-button" type="button">Pročitaj <span aria-hidden="true">↗</span></button>
+        <button
+          class="remove-button"
+          type="button"
+          (click)="$event.stopPropagation(); removePost.emit(post.id)"
+          [attr.aria-label]="'Ukloni post ' + post.title"
+        >
+          Ukloni
+        </button>
+      </div>
     </div>
   </div>
 </article>
