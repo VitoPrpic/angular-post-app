@@ -26,14 +26,25 @@
     <div class="card-footer">
       <span>{{ post.readingTime }} min čitanja</span>
       <div class="card-actions">
-        <button class="read-button" type="button">Pročitaj <span aria-hidden="true">↗</span></button>
+        <button class="read-button" type="button">
+          Pročitaj <span aria-hidden="true">↗</span>
+        </button>
+        <button
+          class="edit-button"
+          type="button"
+          (click)="$event.stopPropagation(); editPost.emit(post)"
+          [attr.aria-label]="'Uredi post ' + post.title"
+        >
+          Uredi
+        </button>
         <button
           class="remove-button"
           type="button"
+          [disabled]="deleting"
           (click)="$event.stopPropagation(); removePost.emit(post.id)"
           [attr.aria-label]="'Ukloni post ' + post.title"
         >
-          Ukloni
+          {{ deleting ? 'Brišem…' : 'Ukloni' }}
         </button>
       </div>
     </div>

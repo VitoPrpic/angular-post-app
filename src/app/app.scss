@@ -236,7 +236,9 @@ textarea::placeholder {
   margin: 0.75rem 0 0;
   padding: 1rem;
   text-transform: none;
-  transition: background 180ms ease, border-color 180ms ease;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
 }
 
 .image-picker:hover {
@@ -349,6 +351,12 @@ textarea::placeholder {
   color: #426544;
 }
 
+.form-actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
 .add-button {
   align-items: center;
   background: var(--ink);
@@ -361,10 +369,32 @@ textarea::placeholder {
   font-weight: 750;
   justify-content: space-between;
   letter-spacing: 0.11em;
-  margin-top: 2rem;
   padding: 1rem 1rem 1rem 1.3rem;
   text-transform: uppercase;
-  transition: background 180ms ease, transform 180ms ease;
+  transition:
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.cancel-button {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  padding: 0.9rem 1rem;
+  text-transform: uppercase;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.cancel-button:hover {
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .add-button:hover {
@@ -410,6 +440,29 @@ textarea::placeholder {
   border: 1px dashed var(--line-strong);
   padding: clamp(3rem, 8vw, 7rem) 2rem;
   text-align: center;
+}
+
+.loading-state {
+  align-items: center;
+  border: 1px dashed var(--line-strong);
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  justify-content: center;
+  min-height: 260px;
+  text-align: center;
+}
+
+.loading-state span {
+  animation: loading-spin 1s linear infinite;
+  color: var(--accent);
+  display: inline-block;
+  font-size: 1.5rem;
+}
+
+.loading-state p {
+  margin: 0;
 }
 
 .empty-state > span {
@@ -647,6 +700,12 @@ textarea::placeholder {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes loading-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

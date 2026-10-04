@@ -6,7 +6,9 @@
   flex-direction: column;
   min-height: 430px;
   overflow: hidden;
-  transition: box-shadow 220ms ease, transform 220ms ease;
+  transition:
+    box-shadow 220ms ease,
+    transform 220ms ease;
 }
 
 .post-card:hover {
@@ -157,12 +159,19 @@ button {
   text-decoration: underline;
   text-decoration-color: transparent;
   text-underline-offset: 0.25rem;
-  transition: color 160ms ease, text-decoration-color 160ms ease;
+  transition:
+    color 160ms ease,
+    text-decoration-color 160ms ease;
 }
 
 button:hover {
   color: #a23b2a;
   text-decoration-color: currentColor;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .card-actions {

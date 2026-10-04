@@ -11,8 +11,8 @@
     <div class="eyebrow">Tvoj mali prostor za velike misli</div>
     <h1 id="page-title">Zapiši. Objavi.<br /><em>Sačuvaj trenutak.</em></h1>
     <p>
-      Dodaj tekst i fotografije te ih pretvori u uredne kartice. Sve što objaviš
-      ostaje spremljeno na ovom uređaju.
+      Dodaj tekst i fotografije te ih pretvori u uredne kartice. Sve što objaviš sigurno ostaje
+      spremljeno u tvojoj bazi.
     </p>
   </section>
 
@@ -20,11 +20,11 @@
     <aside class="composer" id="novi-post">
       <div class="section-number">01</div>
       <div class="composer-heading">
-        <p class="kicker">Novi zapis</p>
-        <h2>Dodaj post</h2>
+        <p class="kicker">{{ editingPostId() === null ? 'Novi zapis' : 'Uređivanje zapisa' }}</p>
+        <h2>{{ editingPostId() === null ? 'Dodaj post' : 'Uredi post' }}</h2>
       </div>
 
-      <form (ngSubmit)="addPost()" novalidate>
+      <form (ngSubmit)="savePost()" novalidate>
         <label for="post-title">Naslov</label>
         <input
           id="post-title"
@@ -36,7 +36,9 @@
           (input)="clearMessage()"
           required
         />
-        <div class="field-meta"><span>Jasno i kratko</span><span>{{ draft.title.length }}/90</span></div>
+        <div class="field-meta">
+          <span>Jasno i kratko</span><span>{{ draft.title.length }}/90</span>
+        </div>
 
         <label for="post-excerpt">Tekst</label>
         <textarea
@@ -49,10 +51,14 @@
           (input)="clearMessage()"
           required
         ></textarea>
-        <div class="field-meta"><span>Sadržaj posta</span><span>{{ draft.excerpt.length }}/3000</span></div>
+        <div class="field-meta">
+          <span>Sadržaj posta</span><span>{{ draft.excerpt.length }}/3000</span>
+        </div>
 
         <div class="image-field">
-          <span class="image-field-label">Slike posta <small>{{ draft.imageDataUrls.length }}/8</small></span>
+          <span class="image-field-label"
+            >Slike posta <small>{{ draft.imageDataUrls.length }}/8</small></span
+          >
           <input
             #imageInput
             class="visually-hidden"
@@ -66,7 +72,9 @@
           <label class="image-picker" for="post-image">
             <span class="upload-icon" aria-hidden="true">↑</span>
             <span>
-              <strong>{{ draft.imageDataUrls.length ? 'Dodaj još slika' : 'Odaberi slike' }}</strong>
+              <strong>{{
+                draft.imageDataUrls.length ? 'Dodaj još slika' : 'Odaberi slike'
+              }}</strong>
               <small>Do 8 JPG, PNG ili WebP slika · svaka do 12 MB</small>
             </span>
           </label>
@@ -81,7 +89,11 @@
                 <div class="image-preview">
                   <img [src]="imageDataUrl" [alt]="'Pregled odabrane slike ' + (imageIndex + 1)" />
                   <span>{{ imageIndex + 1 }}</span>
-                  <button type="button" (click)="removeSelectedImage(imageIndex)" [attr.aria-label]="'Ukloni sliku ' + (imageIndex + 1)">
+                  <button
+                    type="button"
+                    (click)="removeSelectedImage(imageIndex)"
+                    [attr.aria-label]="'Ukloni sliku ' + (imageIndex + 1)"
+                  >
                     ×
                   </button>
                 </div>
@@ -97,10 +109,30 @@
           <p class="form-message success" role="status">{{ successMessage() }}</p>
         }
 
-        <button class="add-button" type="submit" [disabled]="isProcessingImage()">
-          <span>Dodaj post</span>
-          <span class="button-icon" aria-hidden="true">＋</span>
-        </button>
+        <div class="form-actions">
+          <button
+            class="add-button"
+            type="submit"
+            [disabled]="isProcessingImage() || isSaving() || isLoading()"
+          >
+            <span>
+              @if (isSaving()) {
+                Spremanje…
+              } @else if (editingPostId() !== null) {
+                Spremi promjene
+              } @else {
+                Dodaj post
+              }
+            </span>
+            <span class="button-icon" aria-hidden="true">{{
+              editingPostId() === null ? '＋' : '✓'
+            }}</span>
+          </button>
+
+          @if (editingPostId() !== null) {
+            <button class="cancel-button" type="button" (click)="cancelEditing()">Odustani</button>
+          }
+        </div>
       </form>
     </aside>
 
@@ -113,12 +145,19 @@
         <span class="post-count">{{ posts().length.toString().padStart(2, '0') }}</span>
       </div>
 
-      @if (posts().length) {
+      @if (isLoading()) {
+        <div class="loading-state" role="status">
+          <span aria-hidden="true">↻</span>
+          <p>Učitavam postove iz baze…</p>
+        </div>
+      } @else if (posts().length) {
         <div class="posts-grid">
           @for (post of posts(); track post.id) {
             <app-post-card
               [post]="post"
+              [deleting]="pendingDeleteId() === post.id"
               (openPost)="openPost($event)"
+              (editPost)="startEditing($event)"
               (removePost)="removePost($event)"
             />
           }
@@ -157,15 +196,25 @@
           <div class="post-detail-gallery">
             @for (imageDataUrl of post.imageDataUrls; track $index; let imageIndex = $index) {
               <figure>
-                <img [src]="imageDataUrl" [alt]="'Slika ' + (imageIndex + 1) + ' za ' + post.title" />
+                <img
+                  [src]="imageDataUrl"
+                  [alt]="'Slika ' + (imageIndex + 1) + ' za ' + post.title"
+                />
                 @if (post.imageDataUrls.length > 1) {
-                  <figcaption>{{ (imageIndex + 1).toString().padStart(2, '0') }} / {{ post.imageDataUrls.length.toString().padStart(2, '0') }}</figcaption>
+                  <figcaption>
+                    {{ (imageIndex + 1).toString().padStart(2, '0') }} /
+                    {{ post.imageDataUrls.length.toString().padStart(2, '0') }}
+                  </figcaption>
                 }
               </figure>
             }
           </div>
         } @else {
-          <div class="post-detail-placeholder" [class]="'post-detail-placeholder ' + post.accent" aria-hidden="true">
+          <div
+            class="post-detail-placeholder"
+            [class]="'post-detail-placeholder ' + post.accent"
+            aria-hidden="true"
+          >
             <span>{{ post.title.charAt(0) }}</span>
             <span>✦</span>
           </div>

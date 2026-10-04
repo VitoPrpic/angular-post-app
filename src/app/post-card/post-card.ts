@@ -2,7 +2,9 @@ import { DatePipe } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 export interface Post {
-  id: string;
+  id: number;
+  adminUserId: number;
+  categoryId: number | null;
   title: string;
   excerpt: string;
   publishedAt: string;
@@ -19,6 +21,8 @@ export interface Post {
 })
 export class PostCard {
   @Input({ required: true }) post!: Post;
+  @Input() deleting = false;
   @Output() openPost = new EventEmitter<Post>();
-  @Output() removePost = new EventEmitter<string>();
+  @Output() editPost = new EventEmitter<Post>();
+  @Output() removePost = new EventEmitter<number>();
 }

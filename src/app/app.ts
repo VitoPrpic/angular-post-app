@@ -1,6 +1,17 @@
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, ElementRef, inject, signal, ViewChild } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  inject,
+  OnInit,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
+import { ApiPost, BlogApiService, SavePostRequest } from './blog-api.service';
 import { Post, PostCard } from './post-card/post-card';
 
 interface PostDraft {
@@ -9,49 +20,31 @@ interface PostDraft {
   imageDataUrls: string[];
 }
 
-const STORAGE_KEY = 'angular-post-app.posts';
-
-const STARTER_POSTS: Post[] = [
-  {
-    id: 'starter-1',
-    title: 'Male ideje koje mijenjaju svakodnevicu',
-    excerpt:
-      'Nekoliko jednostavnih navika može potpuno promijeniti način na koji planiramo dan i čuvamo vrijeme za važne stvari.',
-    publishedAt: '2026-10-03T09:30:00.000Z',
-    readingTime: 2,
-    accent: 'coral',
-    imageDataUrls: [],
-  },
-  {
-    id: 'starter-2',
-    title: 'Bilješke s jednog sporog nedjeljnog jutra',
-    excerpt:
-      'Kava, otvoren prozor i popis knjiga koje već dugo čekaju. Ponekad je sporiji ritam upravo ono što nam treba.',
-    publishedAt: '2026-09-28T08:15:00.000Z',
-    readingTime: 3,
-    accent: 'sage',
-    imageDataUrls: [],
-  },
-];
-
 @Component({
   selector: 'app-root',
   imports: [DatePipe, FormsModule, PostCard],
   styleUrl: './app.scss',
   templateUrl: './app.html',
 })
-export class App {
+export class App implements OnInit {
+  private readonly api = inject(BlogApiService);
   private readonly destroyRef = inject(DestroyRef);
 
   @ViewChild('imageInput') private imageInput?: ElementRef<HTMLInputElement>;
   @ViewChild('postDialog') private postDialog?: ElementRef<HTMLDialogElement>;
 
-  protected readonly posts = signal<Post[]>(this.loadPosts());
+  protected readonly posts = signal<Post[]>([]);
   protected readonly selectedPost = signal<Post | null>(null);
   protected readonly currentTime = signal(new Date());
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
   protected readonly isProcessingImage = signal(false);
+  protected readonly isLoading = signal(true);
+  protected readonly isSaving = signal(false);
+  protected readonly pendingDeleteId = signal<number | null>(null);
+  protected readonly editingPostId = signal<number | null>(null);
+
+  private readonly ownerId = signal<number | null>(null);
 
   protected draft: PostDraft = this.emptyDraft();
 
@@ -60,50 +53,136 @@ export class App {
     this.destroyRef.onDestroy(() => globalThis.clearInterval(clockTimer));
   }
 
-  protected addPost(): void {
+  ngOnInit(): void {
+    void this.loadPosts();
+  }
+
+  protected async loadPosts(): Promise<void> {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    try {
+      const [owner, apiPosts] = await Promise.all([
+        firstValueFrom(this.api.ensureOwner()),
+        firstValueFrom(this.api.getPosts()),
+      ]);
+
+      this.ownerId.set(owner.id);
+      this.posts.set(apiPosts.map((post) => this.toPost(post)));
+    } catch (error) {
+      this.errorMessage.set(
+        this.getErrorMessage(
+          error,
+          'Ne mogu se spojiti na bazu. Provjeri je li .NET API pokrenut na portu 5180.',
+        ),
+      );
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  protected async savePost(): Promise<void> {
     const title = this.draft.title.trim();
     const excerpt = this.draft.excerpt.trim();
+    const ownerId = this.ownerId();
 
     if (!title || !excerpt) {
-      this.errorMessage.set('Upiši naslov i kratki tekst posta.');
+      this.errorMessage.set('Upiši naslov i tekst posta.');
       this.successMessage.set('');
       return;
     }
 
-    const newPost: Post = {
-      id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`,
-      title,
-      excerpt,
-      publishedAt: new Date().toISOString(),
-      readingTime: this.calculateReadingTime(`${title} ${excerpt}`),
-      accent: this.nextAccent(),
-      imageDataUrls: [...this.draft.imageDataUrls],
-    };
-
-    const nextPosts = [newPost, ...this.posts()];
-
-    if (!this.savePosts(nextPosts)) {
+    if (ownerId === null) {
+      this.errorMessage.set('Veza s bazom još nije spremna. Pokušaj ponovno.');
       return;
     }
 
-    this.posts.set(nextPosts);
-    this.draft = this.emptyDraft();
+    const editingId = this.editingPostId();
+    const existingPost = this.posts().find((post) => post.id === editingId);
+    const request: SavePostRequest = {
+      adminUserId: existingPost?.adminUserId ?? ownerId,
+      categoryId: existingPost?.categoryId ?? null,
+      title,
+      content: excerpt,
+      imageUrls: [...this.draft.imageDataUrls],
+    };
+
+    this.isSaving.set(true);
+    this.clearMessage();
+
+    try {
+      const savedPost =
+        editingId === null
+          ? await firstValueFrom(this.api.createPost(request))
+          : await firstValueFrom(this.api.updatePost(editingId, request));
+      const post = this.toPost(savedPost);
+
+      if (editingId === null) {
+        this.posts.update((posts) => [post, ...posts]);
+        this.successMessage.set('Post je spremljen u bazu.');
+      } else {
+        this.posts.update((posts) =>
+          posts.map((currentPost) => (currentPost.id === editingId ? post : currentPost)),
+        );
+        if (this.selectedPost()?.id === editingId) {
+          this.selectedPost.set(post);
+        }
+        this.successMessage.set('Promjene su spremljene u bazu.');
+      }
+
+      this.resetComposer();
+    } catch (error) {
+      this.errorMessage.set(this.getErrorMessage(error, 'Post se nije mogao spremiti.'));
+    } finally {
+      this.isSaving.set(false);
+    }
+  }
+
+  protected async removePost(id: number): Promise<void> {
+    this.pendingDeleteId.set(id);
+    this.clearMessage();
+
+    try {
+      await firstValueFrom(this.api.deletePost(id));
+      this.posts.update((posts) => posts.filter((post) => post.id !== id));
+
+      if (this.editingPostId() === id) {
+        this.resetComposer();
+      }
+
+      if (this.selectedPost()?.id === id) {
+        this.closePost();
+      }
+
+      this.successMessage.set('Post je uklonjen iz baze.');
+    } catch (error) {
+      this.errorMessage.set(this.getErrorMessage(error, 'Post se nije mogao ukloniti.'));
+    } finally {
+      this.pendingDeleteId.set(null);
+    }
+  }
+
+  protected startEditing(post: Post): void {
+    this.editingPostId.set(post.id);
+    this.draft = {
+      title: post.title,
+      excerpt: post.excerpt,
+      imageDataUrls: [...post.imageDataUrls],
+    };
+    this.clearMessage();
+
     if (this.imageInput) {
       this.imageInput.nativeElement.value = '';
     }
-    this.errorMessage.set('');
-    this.successMessage.set('Post je dodan.');
+
+    globalThis.requestAnimationFrame(() => {
+      document.getElementById('novi-post')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
-  protected removePost(id: string): void {
-    const nextPosts = this.posts().filter((post) => post.id !== id);
-
-    if (!this.savePosts(nextPosts)) {
-      return;
-    }
-
-    this.posts.set(nextPosts);
-    this.successMessage.set('Post je uklonjen.');
+  protected cancelEditing(): void {
+    this.resetComposer();
+    this.clearMessage();
   }
 
   protected openPost(post: Post): void {
@@ -171,7 +250,9 @@ export class App {
   }
 
   protected removeSelectedImage(index: number): void {
-    this.draft.imageDataUrls = this.draft.imageDataUrls.filter((_, imageIndex) => imageIndex !== index);
+    this.draft.imageDataUrls = this.draft.imageDataUrls.filter(
+      (_, imageIndex) => imageIndex !== index,
+    );
     this.clearMessage();
   }
 
@@ -180,11 +261,34 @@ export class App {
     this.successMessage.set('');
   }
 
+  private resetComposer(): void {
+    this.editingPostId.set(null);
+    this.draft = this.emptyDraft();
+
+    if (this.imageInput) {
+      this.imageInput.nativeElement.value = '';
+    }
+  }
+
   private emptyDraft(): PostDraft {
     return {
       title: '',
       excerpt: '',
       imageDataUrls: [],
+    };
+  }
+
+  private toPost(post: ApiPost): Post {
+    return {
+      id: post.id,
+      adminUserId: post.adminUserId,
+      categoryId: post.categoryId,
+      title: post.title,
+      excerpt: post.content,
+      publishedAt: post.createdAt,
+      readingTime: this.calculateReadingTime(`${post.title} ${post.content}`),
+      accent: this.accentForId(post.id),
+      imageDataUrls: post.imageUrls,
     };
   }
 
@@ -230,47 +334,16 @@ export class App {
     return Math.max(1, Math.ceil(wordCount / 180));
   }
 
-  private nextAccent(): Post['accent'] {
+  private accentForId(id: number): Post['accent'] {
     const accents: Post['accent'][] = ['coral', 'sage', 'sky', 'sand'];
-    return accents[this.posts().length % accents.length];
+    return accents[Math.abs(id) % accents.length];
   }
 
-  private loadPosts(): Post[] {
-    try {
-      const savedPosts = localStorage.getItem(STORAGE_KEY);
-      const parsedPosts: LegacyPost[] = savedPosts === null ? STARTER_POSTS : JSON.parse(savedPosts);
-
-      if (!Array.isArray(parsedPosts)) {
-        return STARTER_POSTS;
-      }
-
-      return parsedPosts.map((post) => ({
-        id: post.id,
-        title: post.title,
-        excerpt: post.excerpt,
-        publishedAt: post.publishedAt,
-        readingTime: post.readingTime,
-        accent: post.accent,
-        imageDataUrls: post.imageDataUrls ?? (post.imageDataUrl ? [post.imageDataUrl] : []),
-      }));
-    } catch {
-      return STARTER_POSTS;
+  private getErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof HttpErrorResponse && typeof error.error?.message === 'string') {
+      return error.error.message;
     }
-  }
 
-  private savePosts(posts: Post[]): boolean {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
-      return true;
-    } catch {
-      this.errorMessage.set('Nema dovoljno prostora za spremanje. Pokušaj s manjom slikom ili ukloni neki post.');
-      this.successMessage.set('');
-      return false;
-    }
+    return fallback;
   }
 }
-
-type LegacyPost = Omit<Post, 'imageDataUrls'> & {
-  imageDataUrls?: string[];
-  imageDataUrl?: string;
-};

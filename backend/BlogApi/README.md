@@ -17,6 +17,9 @@ Swagger se otvara na `http://localhost:5180/swagger`.
 2. Po želji kreiraj kategoriju kroz `POST /api/categories`.
 3. Dodaj post kroz `POST /api/posts` koristeći dobiveni `adminUserId`.
 
+Kada koristiš Angular aplikaciju, ona pri prvom spajanju automatski kreira tehničkog
+vlasnika bloga ako u bazi još nema administratora.
+
 Postovi imaju ove metode:
 
 - `GET /api/posts`
