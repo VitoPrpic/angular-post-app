@@ -27,3 +27,5 @@ Zatim otvori `http://localhost:4200`.
 
 SQL shema za `AdminUsers`, `Posts` i `Categories` nalazi se u
 [`database/schema.sql`](database/schema.sql).
+
+ASP.NET Core API sa Swaggerom nalazi se u [`backend/BlogApi`](backend/BlogApi).
