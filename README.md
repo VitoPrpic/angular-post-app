@@ -24,3 +24,6 @@ Zatim otvori `http://localhost:4200`.
 - dodavanje i uklanjanje kartica
 - lokalno spremanje postova
 - responzivan prikaz za mobitel i računalo
+
+SQL shema za `AdminUsers`, `Posts` i `Categories` nalazi se u
+[`database/schema.sql`](database/schema.sql).
