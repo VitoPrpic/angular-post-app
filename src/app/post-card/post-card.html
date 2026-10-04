@@ -1,0 +1,23 @@
+<article class="post-card" [class]="'post-card ' + post.accent">
+  <div class="card-accent" aria-hidden="true">
+    <span>{{ post.category.charAt(0) }}</span>
+    <span>✦</span>
+  </div>
+
+  <div class="card-body">
+    <div class="card-meta">
+      <span>{{ post.category }}</span>
+      <span>{{ post.publishedAt | date: 'dd.MM.yyyy.' }}</span>
+    </div>
+
+    <h3>{{ post.title }}</h3>
+    <p>{{ post.excerpt }}</p>
+
+    <div class="card-footer">
+      <span>{{ post.readingTime }} min čitanja</span>
+      <button type="button" (click)="removePost.emit(post.id)" [attr.aria-label]="'Ukloni post ' + post.title">
+        Ukloni
+      </button>
+    </div>
+  </div>
+</article>

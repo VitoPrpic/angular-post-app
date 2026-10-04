@@ -1,0 +1,109 @@
+<header class="site-header">
+  <a class="brand" href="#top" aria-label="Postovi — početna">
+    <span class="brand-mark">P</span>
+    <span>Postovi</span>
+  </a>
+  <a class="header-link" href="#novi-post">Novi post <span aria-hidden="true">↘</span></a>
+</header>
+
+<main id="top">
+  <section class="intro" aria-labelledby="page-title">
+    <div class="eyebrow">Tvoj mali prostor za velike misli</div>
+    <h1 id="page-title">Zapiši. Objavi.<br /><em>Sačuvaj trenutak.</em></h1>
+    <p>
+      Dodaj kratke postove i pretvori ih u uredne kartice. Sve što napišeš ostaje
+      spremljeno na ovom uređaju.
+    </p>
+  </section>
+
+  <div class="workspace">
+    <aside class="composer" id="novi-post">
+      <div class="section-number">01</div>
+      <div class="composer-heading">
+        <p class="kicker">Novi zapis</p>
+        <h2>Dodaj post</h2>
+      </div>
+
+      <form (ngSubmit)="addPost()" novalidate>
+        <label for="post-title">Naslov</label>
+        <input
+          id="post-title"
+          name="title"
+          type="text"
+          maxlength="90"
+          placeholder="O čemu danas razmišljaš?"
+          [(ngModel)]="draft.title"
+          (input)="clearMessage()"
+          required
+        />
+        <div class="field-meta"><span>Jasno i kratko</span><span>{{ draft.title.length }}/90</span></div>
+
+        <label for="post-excerpt">Tekst</label>
+        <textarea
+          id="post-excerpt"
+          name="excerpt"
+          rows="6"
+          maxlength="360"
+          placeholder="Napiši kratki sadržaj posta…"
+          [(ngModel)]="draft.excerpt"
+          (input)="clearMessage()"
+          required
+        ></textarea>
+        <div class="field-meta"><span>Kratki sažetak</span><span>{{ draft.excerpt.length }}/360</span></div>
+
+        <label for="post-category">Kategorija</label>
+        <div class="select-wrap">
+          <select id="post-category" name="category" [(ngModel)]="draft.category">
+            <option>Ideje</option>
+            <option>Život</option>
+            <option>Posao</option>
+            <option>Putovanja</option>
+            <option>Bilješke</option>
+          </select>
+        </div>
+
+        @if (errorMessage()) {
+          <p class="form-message error" role="alert">{{ errorMessage() }}</p>
+        }
+        @if (successMessage()) {
+          <p class="form-message success" role="status">{{ successMessage() }}</p>
+        }
+
+        <button class="add-button" type="submit">
+          <span>Dodaj post</span>
+          <span class="button-icon" aria-hidden="true">＋</span>
+        </button>
+      </form>
+    </aside>
+
+    <section class="posts-section" aria-labelledby="posts-title">
+      <div class="posts-heading">
+        <div>
+          <p class="kicker">Arhiva</p>
+          <h2 id="posts-title">Tvoji postovi</h2>
+        </div>
+        <span class="post-count">{{ posts().length.toString().padStart(2, '0') }}</span>
+      </div>
+
+      @if (posts().length) {
+        <div class="posts-grid">
+          @for (post of posts(); track post.id) {
+            <app-post-card [post]="post" (removePost)="removePost($event)" />
+          }
+        </div>
+      } @else {
+        <div class="empty-state">
+          <span aria-hidden="true">✦</span>
+          <h3>Još nema postova</h3>
+          <p>Ispuni obrazac i tvoj prvi post pojavit će se ovdje.</p>
+          <a href="#novi-post">Dodaj prvi post</a>
+        </div>
+      }
+    </section>
+  </div>
+</main>
+
+<footer>
+  <span>Postovi</span>
+  <span>Napravljeno za tvoje ideje · 2026</span>
+</footer>

@@ -1,0 +1,121 @@
+.post-card {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  min-height: 430px;
+  overflow: hidden;
+  transition: box-shadow 220ms ease, transform 220ms ease;
+}
+
+.post-card:hover {
+  box-shadow: 0 18px 45px rgba(23, 23, 20, 0.09);
+  transform: translateY(-4px);
+}
+
+.card-accent {
+  align-items: flex-start;
+  display: flex;
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  height: 9rem;
+  justify-content: space-between;
+  padding: 1.2rem 1.35rem;
+}
+
+.card-accent span:first-child {
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  display: inline-flex;
+  height: 2.4rem;
+  justify-content: center;
+  width: 2.4rem;
+}
+
+.coral .card-accent {
+  background: #ef7b5c;
+  color: #5d1d0d;
+}
+
+.sage .card-accent {
+  background: #9fb49b;
+  color: #253326;
+}
+
+.sky .card-accent {
+  background: #9ebbc4;
+  color: #1d3339;
+}
+
+.sand .card-accent {
+  background: #d7bb83;
+  color: #473514;
+}
+
+.card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+.card-meta,
+.card-footer {
+  align-items: center;
+  display: flex;
+  font-size: 0.67rem;
+  font-weight: 700;
+  justify-content: space-between;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card-meta {
+  color: var(--soft-ink);
+}
+
+h3 {
+  font-family: var(--serif);
+  font-size: clamp(1.7rem, 3vw, 2.25rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 2rem 0 1rem;
+}
+
+p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.65;
+  margin: 0 0 2rem;
+}
+
+.card-footer {
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+button {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  padding: 0.35rem 0;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.25rem;
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+button:hover {
+  color: #a23b2a;
+  text-decoration-color: currentColor;
+}
+
+button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent), transparent 55%);
+  outline-offset: 3px;
+}
