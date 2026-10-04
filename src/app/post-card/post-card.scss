@@ -23,6 +23,37 @@
   padding: 1.2rem 1.35rem;
 }
 
+.card-media {
+  height: 12rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.card-media img {
+  height: 100%;
+  object-fit: cover;
+  transition: transform 420ms ease;
+  width: 100%;
+}
+
+.post-card:hover .card-media img {
+  transform: scale(1.035);
+}
+
+.card-media span {
+  align-items: center;
+  background: rgba(244, 240, 232, 0.92);
+  border-radius: 50%;
+  bottom: 1rem;
+  display: inline-flex;
+  font-family: var(--serif);
+  height: 2.4rem;
+  justify-content: center;
+  left: 1rem;
+  position: absolute;
+  width: 2.4rem;
+}
+
 .card-accent span:first-child {
   align-items: center;
   border: 1px solid currentColor;

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, ElementRef, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Post, PostCard } from './post-card/post-card';
 
@@ -6,6 +6,7 @@ interface PostDraft {
   title: string;
   excerpt: string;
   category: string;
+  imageDataUrl: string;
 }
 
 const STORAGE_KEY = 'angular-post-app.posts';
@@ -40,9 +41,12 @@ const STARTER_POSTS: Post[] = [
   templateUrl: './app.html',
 })
 export class App {
+  @ViewChild('imageInput') private imageInput?: ElementRef<HTMLInputElement>;
+
   protected readonly posts = signal<Post[]>(this.loadPosts());
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
+  protected readonly isProcessingImage = signal(false);
 
   protected draft: PostDraft = this.emptyDraft();
 
@@ -64,19 +68,75 @@ export class App {
       publishedAt: new Date().toISOString(),
       readingTime: this.calculateReadingTime(`${title} ${excerpt}`),
       accent: this.nextAccent(),
+      imageDataUrl: this.draft.imageDataUrl || undefined,
     };
 
-    this.posts.update((posts) => [newPost, ...posts]);
-    this.savePosts();
+    const nextPosts = [newPost, ...this.posts()];
+
+    if (!this.savePosts(nextPosts)) {
+      return;
+    }
+
+    this.posts.set(nextPosts);
     this.draft = this.emptyDraft();
+    if (this.imageInput) {
+      this.imageInput.nativeElement.value = '';
+    }
     this.errorMessage.set('');
     this.successMessage.set('Post je dodan.');
   }
 
   protected removePost(id: string): void {
-    this.posts.update((posts) => posts.filter((post) => post.id !== id));
-    this.savePosts();
+    const nextPosts = this.posts().filter((post) => post.id !== id);
+
+    if (!this.savePosts(nextPosts)) {
+      return;
+    }
+
+    this.posts.set(nextPosts);
     this.successMessage.set('Post je uklonjen.');
+  }
+
+  protected async selectImage(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    this.clearMessage();
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      this.errorMessage.set('Odaberi JPG, PNG ili WebP sliku.');
+      input.value = '';
+      return;
+    }
+
+    if (file.size > 12 * 1024 * 1024) {
+      this.errorMessage.set('Slika može imati najviše 12 MB.');
+      input.value = '';
+      return;
+    }
+
+    this.isProcessingImage.set(true);
+
+    try {
+      this.draft.imageDataUrl = await this.compressImage(file);
+    } catch {
+      this.errorMessage.set('Slika se nije mogla obraditi. Pokušaj s drugom slikom.');
+      input.value = '';
+    } finally {
+      this.isProcessingImage.set(false);
+    }
+  }
+
+  protected removeSelectedImage(): void {
+    this.draft.imageDataUrl = '';
+    if (this.imageInput) {
+      this.imageInput.nativeElement.value = '';
+    }
+    this.clearMessage();
   }
 
   protected clearMessage(): void {
@@ -89,7 +149,45 @@ export class App {
       title: '',
       excerpt: '',
       category: 'Ideje',
+      imageDataUrl: '',
     };
+  }
+
+  private compressImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new Image();
+
+      image.onload = () => {
+        const maxWidth = 1400;
+        const maxHeight = 900;
+        const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
+        const width = Math.round(image.width * scale);
+        const height = Math.round(image.height * scale);
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        canvas.width = width;
+        canvas.height = height;
+
+        if (!context) {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('Canvas nije dostupan.'));
+          return;
+        }
+
+        context.drawImage(image, 0, 0, width, height);
+        URL.revokeObjectURL(objectUrl);
+        resolve(canvas.toDataURL('image/webp', 0.82));
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Slika se nije mogla učitati.'));
+      };
+
+      image.src = objectUrl;
+    });
   }
 
   private calculateReadingTime(text: string): number {
@@ -111,7 +209,14 @@ export class App {
     }
   }
 
-  private savePosts(): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.posts()));
+  private savePosts(posts: Post[]): boolean {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+      return true;
+    } catch {
+      this.errorMessage.set('Nema dovoljno prostora za spremanje. Pokušaj s manjom slikom ili ukloni neki post.');
+      this.successMessage.set('');
+      return false;
+    }
   }
 }

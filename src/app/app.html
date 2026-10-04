@@ -11,8 +11,8 @@
     <div class="eyebrow">Tvoj mali prostor za velike misli</div>
     <h1 id="page-title">Zapiši. Objavi.<br /><em>Sačuvaj trenutak.</em></h1>
     <p>
-      Dodaj kratke postove i pretvori ih u uredne kartice. Sve što napišeš ostaje
-      spremljeno na ovom uređaju.
+      Dodaj tekst i fotografije te ih pretvori u uredne kartice. Sve što objaviš
+      ostaje spremljeno na ovom uređaju.
     </p>
   </section>
 
@@ -62,6 +62,37 @@
           </select>
         </div>
 
+        <div class="image-field">
+          <span class="image-field-label">Naslovna slika <small>Neobavezno</small></span>
+          <input
+            #imageInput
+            class="visually-hidden"
+            id="post-image"
+            name="image"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="selectImage($event)"
+          />
+          <label class="image-picker" for="post-image">
+            <span class="upload-icon" aria-hidden="true">↑</span>
+            <span>
+              <strong>{{ draft.imageDataUrl ? 'Promijeni sliku' : 'Odaberi sliku' }}</strong>
+              <small>JPG, PNG ili WebP · do 12 MB</small>
+            </span>
+          </label>
+
+          @if (isProcessingImage()) {
+            <p class="image-status" role="status">Pripremam sliku…</p>
+          }
+
+          @if (draft.imageDataUrl) {
+            <div class="image-preview">
+              <img [src]="draft.imageDataUrl" alt="Pregled odabrane slike" />
+              <button type="button" (click)="removeSelectedImage()">Ukloni sliku</button>
+            </div>
+          }
+        </div>
+
         @if (errorMessage()) {
           <p class="form-message error" role="alert">{{ errorMessage() }}</p>
         }
@@ -69,7 +100,7 @@
           <p class="form-message success" role="status">{{ successMessage() }}</p>
         }
 
-        <button class="add-button" type="submit">
+        <button class="add-button" type="submit" [disabled]="isProcessingImage()">
           <span>Dodaj post</span>
           <span class="button-icon" aria-hidden="true">＋</span>
         </button>

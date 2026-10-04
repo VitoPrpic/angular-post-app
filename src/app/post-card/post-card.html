@@ -1,8 +1,15 @@
 <article class="post-card" [class]="'post-card ' + post.accent">
-  <div class="card-accent" aria-hidden="true">
-    <span>{{ post.category.charAt(0) }}</span>
-    <span>✦</span>
-  </div>
+  @if (post.imageDataUrl) {
+    <div class="card-media">
+      <img [src]="post.imageDataUrl" [alt]="'Naslovna slika za ' + post.title" />
+      <span aria-hidden="true">{{ post.category.charAt(0) }}</span>
+    </div>
+  } @else {
+    <div class="card-accent" aria-hidden="true">
+      <span>{{ post.category.charAt(0) }}</span>
+      <span>✦</span>
+    </div>
+  }
 
   <div class="card-body">
     <div class="card-meta">

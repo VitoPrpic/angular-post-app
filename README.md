@@ -15,8 +15,9 @@ Zatim otvori `http://localhost:4200`.
 
 ## Što je uključeno
 
-- obrazac za naslov, tekst i kategoriju posta
+- obrazac za naslov, tekst, kategoriju i naslovnu sliku posta
 - reusable `PostCard` komponenta
+- pregled, smanjivanje i lokalno spremanje JPG, PNG i WebP slika
 - automatski datum i procjena vremena čitanja
 - dodavanje i uklanjanje kartica
 - lokalno spremanje postova

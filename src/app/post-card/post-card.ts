@@ -9,6 +9,7 @@ export interface Post {
   publishedAt: string;
   readingTime: number;
   accent: 'coral' | 'sage' | 'sky' | 'sand';
+  imageDataUrl?: string;
 }
 
 @Component({
