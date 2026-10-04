@@ -1,19 +1,22 @@
 <article class="post-card" [class]="'post-card ' + post.accent" (click)="openPost.emit(post)">
-  @if (post.imageDataUrl) {
+  @if (post.imageDataUrls.length) {
     <div class="card-media">
-      <img [src]="post.imageDataUrl" [alt]="'Naslovna slika za ' + post.title" />
-      <span aria-hidden="true">{{ post.category.charAt(0) }}</span>
+      <img [src]="post.imageDataUrls[0]" [alt]="'Naslovna slika za ' + post.title" />
+      <span class="title-initial" aria-hidden="true">{{ post.title.charAt(0) }}</span>
+      @if (post.imageDataUrls.length > 1) {
+        <span class="image-count">+{{ post.imageDataUrls.length - 1 }} slike</span>
+      }
     </div>
   } @else {
     <div class="card-accent" aria-hidden="true">
-      <span>{{ post.category.charAt(0) }}</span>
+      <span>{{ post.title.charAt(0) }}</span>
       <span>✦</span>
     </div>
   }
 
   <div class="card-body">
     <div class="card-meta">
-      <span>{{ post.category }}</span>
+      <span>Objavljeno</span>
       <span>{{ post.publishedAt | date: 'dd.MM.yyyy.' }}</span>
     </div>
 

@@ -41,7 +41,7 @@
   transform: scale(1.035);
 }
 
-.card-media span {
+.card-media .title-initial {
   align-items: center;
   background: rgba(244, 240, 232, 0.92);
   border-radius: 50%;
@@ -53,6 +53,20 @@
   left: 1rem;
   position: absolute;
   width: 2.4rem;
+}
+
+.image-count {
+  background: rgba(23, 23, 20, 0.82);
+  border-radius: 999px;
+  color: white;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  padding: 0.5rem 0.65rem;
+  position: absolute;
+  right: 1rem;
+  text-transform: uppercase;
+  top: 1rem;
 }
 
 .card-accent span:first-child {

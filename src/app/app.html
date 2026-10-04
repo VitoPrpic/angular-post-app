@@ -1,8 +1,8 @@
 <header class="site-header">
-  <a class="brand" href="#top" aria-label="Postovi — početna">
-    <span class="brand-mark">P</span>
-    <span>Postovi</span>
-  </a>
+  <div class="live-clock" aria-label="Trenutno vrijeme">
+    <span>{{ currentTime() | date: 'HH:mm:ss' }}</span>
+    <small>Trenutno vrijeme</small>
+  </div>
   <a class="header-link" href="#novi-post">Novi post <span aria-hidden="true">↘</span></a>
 </header>
 
@@ -51,33 +51,23 @@
         ></textarea>
         <div class="field-meta"><span>Sadržaj posta</span><span>{{ draft.excerpt.length }}/3000</span></div>
 
-        <label for="post-category">Kategorija</label>
-        <div class="select-wrap">
-          <select id="post-category" name="category" [(ngModel)]="draft.category">
-            <option>Ideje</option>
-            <option>Život</option>
-            <option>Posao</option>
-            <option>Putovanja</option>
-            <option>Bilješke</option>
-          </select>
-        </div>
-
         <div class="image-field">
-          <span class="image-field-label">Naslovna slika <small>Neobavezno</small></span>
+          <span class="image-field-label">Slike posta <small>{{ draft.imageDataUrls.length }}/8</small></span>
           <input
             #imageInput
             class="visually-hidden"
             id="post-image"
             name="image"
             type="file"
+            multiple
             accept="image/jpeg,image/png,image/webp"
-            (change)="selectImage($event)"
+            (change)="selectImages($event)"
           />
           <label class="image-picker" for="post-image">
             <span class="upload-icon" aria-hidden="true">↑</span>
             <span>
-              <strong>{{ draft.imageDataUrl ? 'Promijeni sliku' : 'Odaberi sliku' }}</strong>
-              <small>JPG, PNG ili WebP · do 12 MB</small>
+              <strong>{{ draft.imageDataUrls.length ? 'Dodaj još slika' : 'Odaberi slike' }}</strong>
+              <small>Do 8 JPG, PNG ili WebP slika · svaka do 12 MB</small>
             </span>
           </label>
 
@@ -85,10 +75,17 @@
             <p class="image-status" role="status">Pripremam sliku…</p>
           }
 
-          @if (draft.imageDataUrl) {
-            <div class="image-preview">
-              <img [src]="draft.imageDataUrl" alt="Pregled odabrane slike" />
-              <button type="button" (click)="removeSelectedImage()">Ukloni sliku</button>
+          @if (draft.imageDataUrls.length) {
+            <div class="image-preview-grid">
+              @for (imageDataUrl of draft.imageDataUrls; track $index; let imageIndex = $index) {
+                <div class="image-preview">
+                  <img [src]="imageDataUrl" [alt]="'Pregled odabrane slike ' + (imageIndex + 1)" />
+                  <span>{{ imageIndex + 1 }}</span>
+                  <button type="button" (click)="removeSelectedImage(imageIndex)" [attr.aria-label]="'Ukloni sliku ' + (imageIndex + 1)">
+                    ×
+                  </button>
+                </div>
+              }
             </div>
           }
         </div>
@@ -148,28 +145,34 @@
   @if (selectedPost(); as post) {
     <article class="post-detail">
       <div class="post-detail-toolbar">
-        <span>Postovi / {{ post.category }}</span>
+        <span>Postovi / cijeli post</span>
         <button type="button" (click)="closePost()" aria-label="Zatvori post">
           <span>Zatvori</span>
           <span aria-hidden="true">×</span>
         </button>
       </div>
 
-      <div class="post-detail-layout" [class.without-image]="!post.imageDataUrl">
-        @if (post.imageDataUrl) {
-          <div class="post-detail-media">
-            <img [src]="post.imageDataUrl" [alt]="'Naslovna slika za ' + post.title" />
+      <div class="post-detail-layout" [class.without-image]="!post.imageDataUrls.length">
+        @if (post.imageDataUrls.length) {
+          <div class="post-detail-gallery">
+            @for (imageDataUrl of post.imageDataUrls; track $index; let imageIndex = $index) {
+              <figure>
+                <img [src]="imageDataUrl" [alt]="'Slika ' + (imageIndex + 1) + ' za ' + post.title" />
+                @if (post.imageDataUrls.length > 1) {
+                  <figcaption>{{ (imageIndex + 1).toString().padStart(2, '0') }} / {{ post.imageDataUrls.length.toString().padStart(2, '0') }}</figcaption>
+                }
+              </figure>
+            }
           </div>
         } @else {
           <div class="post-detail-placeholder" [class]="'post-detail-placeholder ' + post.accent" aria-hidden="true">
-            <span>{{ post.category.charAt(0) }}</span>
+            <span>{{ post.title.charAt(0) }}</span>
             <span>✦</span>
           </div>
         }
 
         <div class="post-detail-content">
           <div class="post-detail-meta">
-            <span>{{ post.category }}</span>
             <span>{{ post.publishedAt | date: 'dd.MM.yyyy.' }}</span>
             <span>{{ post.readingTime }} min čitanja</span>
           </div>

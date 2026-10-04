@@ -1,13 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { Component, ElementRef, signal, ViewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Post, PostCard } from './post-card/post-card';
 
 interface PostDraft {
   title: string;
   excerpt: string;
-  category: string;
-  imageDataUrl: string;
+  imageDataUrls: string[];
 }
 
 const STORAGE_KEY = 'angular-post-app.posts';
@@ -18,20 +17,20 @@ const STARTER_POSTS: Post[] = [
     title: 'Male ideje koje mijenjaju svakodnevicu',
     excerpt:
       'Nekoliko jednostavnih navika može potpuno promijeniti način na koji planiramo dan i čuvamo vrijeme za važne stvari.',
-    category: 'Ideje',
     publishedAt: '2026-10-03T09:30:00.000Z',
     readingTime: 2,
     accent: 'coral',
+    imageDataUrls: [],
   },
   {
     id: 'starter-2',
     title: 'Bilješke s jednog sporog nedjeljnog jutra',
     excerpt:
       'Kava, otvoren prozor i popis knjiga koje već dugo čekaju. Ponekad je sporiji ritam upravo ono što nam treba.',
-    category: 'Život',
     publishedAt: '2026-09-28T08:15:00.000Z',
     readingTime: 3,
     accent: 'sage',
+    imageDataUrls: [],
   },
 ];
 
@@ -42,16 +41,24 @@ const STARTER_POSTS: Post[] = [
   templateUrl: './app.html',
 })
 export class App {
+  private readonly destroyRef = inject(DestroyRef);
+
   @ViewChild('imageInput') private imageInput?: ElementRef<HTMLInputElement>;
   @ViewChild('postDialog') private postDialog?: ElementRef<HTMLDialogElement>;
 
   protected readonly posts = signal<Post[]>(this.loadPosts());
   protected readonly selectedPost = signal<Post | null>(null);
+  protected readonly currentTime = signal(new Date());
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
   protected readonly isProcessingImage = signal(false);
 
   protected draft: PostDraft = this.emptyDraft();
+
+  constructor() {
+    const clockTimer = globalThis.setInterval(() => this.currentTime.set(new Date()), 1000);
+    this.destroyRef.onDestroy(() => globalThis.clearInterval(clockTimer));
+  }
 
   protected addPost(): void {
     const title = this.draft.title.trim();
@@ -67,11 +74,10 @@ export class App {
       id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`,
       title,
       excerpt,
-      category: this.draft.category,
       publishedAt: new Date().toISOString(),
       readingTime: this.calculateReadingTime(`${title} ${excerpt}`),
       accent: this.nextAccent(),
-      imageDataUrl: this.draft.imageDataUrl || undefined,
+      imageDataUrls: [...this.draft.imageDataUrls],
     };
 
     const nextPosts = [newPost, ...this.posts()];
@@ -118,24 +124,30 @@ export class App {
     }
   }
 
-  protected async selectImage(event: Event): Promise<void> {
+  protected async selectImages(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+    const files = Array.from(input.files ?? []);
 
-    if (!file) {
+    if (!files.length) {
       return;
     }
 
     this.clearMessage();
 
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    if (this.draft.imageDataUrls.length + files.length > 8) {
+      this.errorMessage.set('Jedan post može imati najviše 8 slika.');
+      input.value = '';
+      return;
+    }
+
+    if (files.some((file) => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type))) {
       this.errorMessage.set('Odaberi JPG, PNG ili WebP sliku.');
       input.value = '';
       return;
     }
 
-    if (file.size > 12 * 1024 * 1024) {
-      this.errorMessage.set('Slika može imati najviše 12 MB.');
+    if (files.some((file) => file.size > 12 * 1024 * 1024)) {
+      this.errorMessage.set('Svaka slika može imati najviše 12 MB.');
       input.value = '';
       return;
     }
@@ -143,20 +155,23 @@ export class App {
     this.isProcessingImage.set(true);
 
     try {
-      this.draft.imageDataUrl = await this.compressImage(file);
+      const compressedImages: string[] = [];
+
+      for (const file of files) {
+        compressedImages.push(await this.compressImage(file));
+      }
+
+      this.draft.imageDataUrls = [...this.draft.imageDataUrls, ...compressedImages];
     } catch {
-      this.errorMessage.set('Slika se nije mogla obraditi. Pokušaj s drugom slikom.');
-      input.value = '';
+      this.errorMessage.set('Neke slike nisu se mogle obraditi. Pokušaj ponovno.');
     } finally {
+      input.value = '';
       this.isProcessingImage.set(false);
     }
   }
 
-  protected removeSelectedImage(): void {
-    this.draft.imageDataUrl = '';
-    if (this.imageInput) {
-      this.imageInput.nativeElement.value = '';
-    }
+  protected removeSelectedImage(index: number): void {
+    this.draft.imageDataUrls = this.draft.imageDataUrls.filter((_, imageIndex) => imageIndex !== index);
     this.clearMessage();
   }
 
@@ -169,8 +184,7 @@ export class App {
     return {
       title: '',
       excerpt: '',
-      category: 'Ideje',
-      imageDataUrl: '',
+      imageDataUrls: [],
     };
   }
 
@@ -224,7 +238,21 @@ export class App {
   private loadPosts(): Post[] {
     try {
       const savedPosts = localStorage.getItem(STORAGE_KEY);
-      return savedPosts === null ? STARTER_POSTS : JSON.parse(savedPosts);
+      const parsedPosts: LegacyPost[] = savedPosts === null ? STARTER_POSTS : JSON.parse(savedPosts);
+
+      if (!Array.isArray(parsedPosts)) {
+        return STARTER_POSTS;
+      }
+
+      return parsedPosts.map((post) => ({
+        id: post.id,
+        title: post.title,
+        excerpt: post.excerpt,
+        publishedAt: post.publishedAt,
+        readingTime: post.readingTime,
+        accent: post.accent,
+        imageDataUrls: post.imageDataUrls ?? (post.imageDataUrl ? [post.imageDataUrl] : []),
+      }));
     } catch {
       return STARTER_POSTS;
     }
@@ -241,3 +269,8 @@ export class App {
     }
   }
 }
+
+type LegacyPost = Omit<Post, 'imageDataUrls'> & {
+  imageDataUrls?: string[];
+  imageDataUrl?: string;
+};

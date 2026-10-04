@@ -13,31 +13,31 @@
   padding: 1.25rem clamp(1.25rem, 5vw, 5rem);
 }
 
-.brand,
 .header-link {
   color: var(--ink);
   text-decoration: none;
 }
 
-.brand {
-  align-items: center;
+.live-clock {
   display: flex;
-  font-family: var(--serif);
-  font-size: 1.25rem;
-  font-weight: 700;
-  gap: 0.7rem;
+  flex-direction: column;
 }
 
-.brand-mark {
-  align-items: center;
-  background: var(--ink);
-  border-radius: 50%;
-  color: var(--paper);
-  display: inline-flex;
-  font-size: 0.95rem;
-  height: 2rem;
-  justify-content: center;
-  width: 2rem;
+.live-clock span {
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.live-clock small {
+  color: var(--soft-ink);
+  font-size: 0.56rem;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+  margin-top: 0.3rem;
+  text-transform: uppercase;
 }
 
 .header-link {
@@ -157,8 +157,7 @@ label {
 }
 
 input,
-textarea,
-select {
+textarea {
   background: transparent;
   border: 0;
   border-bottom: 1px solid var(--line-strong);
@@ -178,8 +177,7 @@ textarea {
 }
 
 input:focus,
-textarea:focus,
-select:focus {
+textarea:focus {
   border-color: var(--accent);
 }
 
@@ -194,22 +192,6 @@ textarea::placeholder {
   font-size: 0.68rem;
   justify-content: space-between;
   margin-top: 0.45rem;
-}
-
-.select-wrap {
-  position: relative;
-}
-
-.select-wrap::after {
-  content: '⌄';
-  pointer-events: none;
-  position: absolute;
-  right: 0;
-  top: 0.65rem;
-}
-
-select {
-  appearance: none;
 }
 
 .image-field {
@@ -303,31 +285,55 @@ select {
   margin: 0.75rem 0 0;
 }
 
-.image-preview {
+.image-preview-grid {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 0.75rem;
+}
+
+.image-preview {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
   position: relative;
 }
 
 .image-preview img {
-  aspect-ratio: 16 / 9;
   display: block;
+  height: 100%;
   object-fit: cover;
   width: 100%;
+}
+
+.image-preview > span {
+  align-items: center;
+  background: rgba(244, 240, 232, 0.92);
+  border-radius: 50%;
+  display: flex;
+  font-size: 0.64rem;
+  font-weight: 750;
+  height: 1.7rem;
+  justify-content: center;
+  left: 0.45rem;
+  position: absolute;
+  top: 0.45rem;
+  width: 1.7rem;
 }
 
 .image-preview button {
   background: rgba(23, 23, 20, 0.86);
   border: 0;
-  bottom: 0.6rem;
+  border-radius: 50%;
   color: white;
   cursor: pointer;
-  font-size: 0.67rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  height: 1.7rem;
+  line-height: 1;
+  padding: 0;
   position: absolute;
-  right: 0.6rem;
-  text-transform: uppercase;
+  right: 0.45rem;
+  top: 0.45rem;
+  width: 1.7rem;
 }
 
 .form-message {
@@ -374,7 +380,6 @@ select {
 
 .add-button:focus-visible,
 .header-link:focus-visible,
-.brand:focus-visible,
 .empty-state a:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--accent), transparent 55%);
   outline-offset: 4px;
@@ -506,16 +511,42 @@ select {
   min-height: 0;
 }
 
-.post-detail-media,
+.post-detail-gallery,
 .post-detail-placeholder {
   min-height: 0;
 }
 
-.post-detail-media img {
+.post-detail-gallery {
+  background: #191916;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+}
+
+.post-detail-gallery figure {
+  height: 100%;
+  margin: 0;
+  position: relative;
+  scroll-snap-align: start;
+}
+
+.post-detail-gallery img {
   display: block;
   height: 100%;
   object-fit: cover;
   width: 100%;
+}
+
+.post-detail-gallery figcaption {
+  background: rgba(23, 23, 20, 0.78);
+  bottom: 1rem;
+  color: white;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  padding: 0.55rem 0.7rem;
+  position: absolute;
+  right: 1rem;
 }
 
 .post-detail-placeholder {
@@ -683,9 +714,20 @@ footer span:first-child {
     overflow-y: auto;
   }
 
-  .post-detail-media,
+  .post-detail-gallery,
   .post-detail-placeholder {
-    height: 42dvh;
+    height: 46dvh;
+  }
+
+  .post-detail-gallery {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+  }
+
+  .post-detail-gallery figure {
+    flex: 0 0 100%;
   }
 
   .post-detail-content {
