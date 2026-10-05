@@ -1,240 +1,246 @@
-<header class="site-header">
-  <div class="live-clock" aria-label="Trenutno vrijeme">
-    <span>{{ currentTime() | date: 'HH:mm:ss' }}</span>
-    <small>Trenutno vrijeme</small>
-  </div>
-  <a class="header-link" href="#novi-post">Novi post <span aria-hidden="true">↘</span></a>
-</header>
+  <header class="site-header">
+    <div class="live-clock" aria-label="Trenutno vrijeme">
+      <span>{{ currentTime() | date: 'HH:mm:ss' }}</span>
+    </div>
 
-<main id="top">
-  <section class="intro" aria-labelledby="page-title">
-    <div class="eyebrow">Tvoj mali prostor za velike misli</div>
-    <h1 id="page-title">Zapiši. Objavi.<br /><em>Sačuvaj trenutak.</em></h1>
-    <p>
-      Dodaj tekst i fotografije te ih pretvori u uredne kartice. Sve što objaviš sigurno ostaje
-      spremljeno u tvojoj bazi.
-    </p>
-  </section>
+    <nav class="main-nav" aria-label="Glavna navigacija">
+      <a href="#postovi">Postovi</a>
+      <a href="#tko-sam-ja">Tko sam ja</a>
+    </nav>
 
-  <div class="workspace">
-    <aside class="composer" id="novi-post">
-      <div class="section-number">01</div>
-      <div class="composer-heading">
-        <p class="kicker">{{ editingPostId() === null ? 'Novi zapis' : 'Uređivanje zapisa' }}</p>
-        <h2>{{ editingPostId() === null ? 'Dodaj post' : 'Uredi post' }}</h2>
-      </div>
+    <a class="header-link" href="#novi-post">Novi post <span aria-hidden="true"></span></a>
+  </header>
 
-      <form (ngSubmit)="savePost()" novalidate>
-        <label for="post-title">Naslov</label>
-        <input
-          id="post-title"
-          name="title"
-          type="text"
-          maxlength="90"
-          placeholder="O čemu danas razmišljaš?"
-          [(ngModel)]="draft.title"
-          (input)="clearMessage()"
-          required
-        />
-        <div class="field-meta">
-          <span>Jasno i kratko</span><span>{{ draft.title.length }}/90</span>
-        </div>
-
-        <label for="post-excerpt">Tekst</label>
-        <textarea
-          id="post-excerpt"
-          name="excerpt"
-          rows="6"
-          maxlength="3000"
-          placeholder="Napiši sadržaj posta…"
-          [(ngModel)]="draft.excerpt"
-          (input)="clearMessage()"
-          required
-        ></textarea>
-        <div class="field-meta">
-          <span>Sadržaj posta</span><span>{{ draft.excerpt.length }}/3000</span>
-        </div>
-
-        <div class="image-field">
-          <span class="image-field-label"
-            >Slike posta <small>{{ draft.imageDataUrls.length }}/8</small></span
-          >
-          <input
-            #imageInput
-            class="visually-hidden"
-            id="post-image"
-            name="image"
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp"
-            (change)="selectImages($event)"
-          />
-          <label class="image-picker" for="post-image">
-            <span class="upload-icon" aria-hidden="true">↑</span>
-            <span>
-              <strong>{{
-                draft.imageDataUrls.length ? 'Dodaj još slika' : 'Odaberi slike'
-              }}</strong>
-              <small>Do 8 JPG, PNG ili WebP slika · svaka do 12 MB</small>
-            </span>
-          </label>
-
-          @if (isProcessingImage()) {
-            <p class="image-status" role="status">Pripremam sliku…</p>
-          }
-
-          @if (draft.imageDataUrls.length) {
-            <div class="image-preview-grid">
-              @for (imageDataUrl of draft.imageDataUrls; track $index; let imageIndex = $index) {
-                <div class="image-preview">
-                  <img [src]="imageDataUrl" [alt]="'Pregled odabrane slike ' + (imageIndex + 1)" />
-                  <span>{{ imageIndex + 1 }}</span>
-                  <button
-                    type="button"
-                    (click)="removeSelectedImage(imageIndex)"
-                    [attr.aria-label]="'Ukloni sliku ' + (imageIndex + 1)"
-                  >
-                    ×
-                  </button>
-                </div>
-              }
-            </div>
-          }
-        </div>
-
-        @if (errorMessage()) {
-          <p class="form-message error" role="alert">{{ errorMessage() }}</p>
-        }
-        @if (successMessage()) {
-          <p class="form-message success" role="status">{{ successMessage() }}</p>
-        }
-
-        <div class="form-actions">
-          <button
-            class="add-button"
-            type="submit"
-            [disabled]="isProcessingImage() || isSaving() || isLoading()"
-          >
-            <span>
-              @if (isSaving()) {
-                Spremanje…
-              } @else if (editingPostId() !== null) {
-                Spremi promjene
-              } @else {
-                Dodaj post
-              }
-            </span>
-            <span class="button-icon" aria-hidden="true">{{
-              editingPostId() === null ? '＋' : '✓'
-            }}</span>
-          </button>
-
-          @if (editingPostId() !== null) {
-            <button class="cancel-button" type="button" (click)="cancelEditing()">Odustani</button>
-          }
-        </div>
-      </form>
-    </aside>
-
-    <section class="posts-section" aria-labelledby="posts-title">
-      <div class="posts-heading">
-        <div>
-          <p class="kicker">Arhiva</p>
-          <h2 id="posts-title">Tvoji postovi</h2>
-        </div>
-        <span class="post-count">{{ posts().length.toString().padStart(2, '0') }}</span>
-      </div>
-
-      @if (isLoading()) {
-        <div class="loading-state" role="status">
-          <span aria-hidden="true">↻</span>
-          <p>Učitavam postove iz baze…</p>
-        </div>
-      } @else if (posts().length) {
-        <div class="posts-grid">
-          @for (post of posts(); track post.id) {
-            <app-post-card
-              [post]="post"
-              [deleting]="pendingDeleteId() === post.id"
-              (openPost)="openPost($event)"
-              (editPost)="startEditing($event)"
-              (removePost)="removePost($event)"
-            />
-          }
-        </div>
-      } @else {
-        <div class="empty-state">
-          <span aria-hidden="true">✦</span>
-          <h3>Još nema postova</h3>
-          <p>Ispuni obrazac i tvoj prvi post pojavit će se ovdje.</p>
-          <a href="#novi-post">Dodaj prvi post</a>
-        </div>
-      }
+  <main id="top">
+    <section class="intro" id="postovi" aria-labelledby="page-title">
+      <h1 id="page-title">Postovi</h1>
     </section>
-  </div>
-</main>
 
-<dialog
-  #postDialog
-  class="post-dialog"
-  aria-labelledby="post-dialog-title"
-  (click)="closePostFromBackdrop($event)"
-  (close)="selectedPost.set(null)"
->
-  @if (selectedPost(); as post) {
-    <article class="post-detail">
-      <div class="post-detail-toolbar">
-        <span>Postovi / cijeli post</span>
-        <button type="button" (click)="closePost()" aria-label="Zatvori post">
-          <span>Zatvori</span>
-          <span aria-hidden="true">×</span>
-        </button>
-      </div>
+    <div class="workspace">
+      <aside class="composer" id="novi-post">
+        <div class="section-number">01</div>
+        <div class="composer-heading">
+          <p class="kicker">{{ editingPostId() === null ? 'Novi zapis' : 'Uređivanje zapisa' }}</p>
+          <h2>{{ editingPostId() === null ? 'Dodaj post' : 'Uredi post' }}</h2>
+        </div>
 
-      <div class="post-detail-layout" [class.without-image]="!post.imageDataUrls.length">
-        @if (post.imageDataUrls.length) {
-          <div class="post-detail-gallery">
-            @for (imageDataUrl of post.imageDataUrls; track $index; let imageIndex = $index) {
-              <figure>
-                <img
-                  [src]="imageDataUrl"
-                  [alt]="'Slika ' + (imageIndex + 1) + ' za ' + post.title"
-                />
-                @if (post.imageDataUrls.length > 1) {
-                  <figcaption>
-                    {{ (imageIndex + 1).toString().padStart(2, '0') }} /
-                    {{ post.imageDataUrls.length.toString().padStart(2, '0') }}
-                  </figcaption>
+        <form (ngSubmit)="savePost()" novalidate>
+          <label for="post-title">Naslov</label>
+          <input
+            id="post-title"
+            name="title"
+            type="text"
+            maxlength="90"
+            placeholder="O čemu danas razmišljaš?"
+            [(ngModel)]="draft.title"
+            (input)="clearMessage()"
+            required
+          />
+          <div class="field-meta">
+            <span>Jasno i kratko</span><span>{{ draft.title.length }}/90</span>
+          </div>
+
+          <label for="post-excerpt">Tekst</label>
+          <textarea
+            id="post-excerpt"
+            name="excerpt"
+            rows="6"
+            maxlength="3000"
+            placeholder="Napiši sadržaj posta…"
+            [(ngModel)]="draft.excerpt"
+            (input)="clearMessage()"
+            required
+          ></textarea>
+          <div class="field-meta">
+            <span>Sadržaj posta</span><span>{{ draft.excerpt.length }}/3000</span>
+          </div>
+
+          <div class="image-field">
+            <span class="image-field-label"
+              >Slike posta <small>{{ draft.imageDataUrls.length }}/8</small></span
+            >
+            <input
+              #imageInput
+              class="visually-hidden"
+              id="post-image"
+              name="image"
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp"
+              (change)="selectImages($event)"
+            />
+            <label class="image-picker" for="post-image">
+              <span class="upload-icon" aria-hidden="true">↑</span>
+              <span>
+                <strong>{{
+                  draft.imageDataUrls.length ? 'Dodaj još slika' : 'Odaberi slike'
+                }}</strong>
+                <small>Do 8 JPG, PNG ili WebP slika · svaka do 12 MB</small>
+              </span>
+            </label>
+
+            @if (isProcessingImage()) {
+              <p class="image-status" role="status">Pripremam sliku…</p>
+            }
+
+            @if (draft.imageDataUrls.length) {
+              <div class="image-preview-grid">
+                @for (imageDataUrl of draft.imageDataUrls; track $index; let imageIndex = $index) {
+                  <div class="image-preview">
+                    <img [src]="imageDataUrl" [alt]="'Pregled odabrane slike ' + (imageIndex + 1)" />
+                    <span>{{ imageIndex + 1 }}</span>
+                    <button
+                      type="button"
+                      (click)="removeSelectedImage(imageIndex)"
+                      [attr.aria-label]="'Ukloni sliku ' + (imageIndex + 1)"
+                    >
+                      ×
+                    </button>
+                  </div>
                 }
-              </figure>
+              </div>
+            }
+          </div>
+
+          @if (errorMessage()) {
+            <p class="form-message error" role="alert">{{ errorMessage() }}</p>
+          }
+          @if (successMessage()) {
+            <p class="form-message success" role="status">{{ successMessage() }}</p>
+          }
+
+          <div class="form-actions">
+            <button
+              class="add-button"
+              type="submit"
+              [disabled]="isProcessingImage() || isSaving() || isLoading()"
+            >
+              <span>
+                @if (isSaving()) {
+                  Spremanje…
+                } @else if (editingPostId() !== null) {
+                  Spremi promjene
+                } @else {
+                  Dodaj post
+                }
+              </span>
+              <span class="button-icon" aria-hidden="true">{{
+                editingPostId() === null ? '＋' : '✓'
+              }}</span>
+            </button>
+
+            @if (editingPostId() !== null) {
+              <button class="cancel-button" type="button" (click)="cancelEditing()">Odustani</button>
+            }
+          </div>
+        </form>
+      </aside>
+
+      <section class="posts-section" aria-labelledby="posts-title">
+        <div class="posts-heading">
+          <div>
+            <p class="kicker">Arhiva</p>
+          </div>
+          <span class="post-count">{{ posts().length.toString().padStart(2, '0') }}</span>
+        </div>
+
+        @if (isLoading()) {
+          <div class="loading-state" role="status">
+            <span aria-hidden="true">↻</span>
+            <p>Učitavam postove iz baze…</p>
+          </div>
+        } @else if (posts().length) {
+          <div class="posts-grid">
+            @for (post of posts(); track post.id) {
+              <app-post-card
+                [post]="post"
+                [deleting]="pendingDeleteId() === post.id"
+                (openPost)="openPost($event)"
+                (editPost)="startEditing($event)"
+                (removePost)="removePost($event)"
+              />
             }
           </div>
         } @else {
-          <div
-            class="post-detail-placeholder"
-            [class]="'post-detail-placeholder ' + post.accent"
-            aria-hidden="true"
-          >
-            <span>{{ post.title.charAt(0) }}</span>
-            <span>✦</span>
+          <div class="empty-state">
+            <span aria-hidden="true">✦</span>
+            <h3>Još nema postova</h3>
+            <p>Ispuni obrazac i tvoj prvi post pojavit će se ovdje.</p>
+            <a href="#novi-post">Dodaj prvi post</a>
           </div>
         }
+      </section>
+    </div>
 
-        <div class="post-detail-content">
-          <div class="post-detail-meta">
-            <span>{{ post.publishedAt | date: 'dd.MM.yyyy.' }}</span>
-            <span>{{ post.readingTime }} min čitanja</span>
-          </div>
-          <h2 id="post-dialog-title">{{ post.title }}</h2>
-          <p>{{ post.excerpt }}</p>
-          <div class="post-detail-end" aria-hidden="true">✦</div>
-        </div>
+    <section class="about-section" id="tko-sam-ja" aria-labelledby="about-title">
+      <p class="kicker">O autoru</p>
+      <div class="about-content">
+        <h2 id="about-title">Tko sam ja</h2>
+        <p>
+          Ja sam Vito Prpić i ovo je moj arhiv lekcija i zapisa iz angulara prema tečaju Maximilian Schwarzmüllera.
+        </p>
       </div>
-    </article>
-  }
-</dialog>
+    </section>
+  </main>
 
-<footer>
-  <span>Postovi</span>
-  <span>Napravljeno za tvoje ideje · 2026</span>
-</footer>
+  <dialog
+    #postDialog
+    class="post-dialog"
+    aria-labelledby="post-dialog-title"
+    (click)="closePostFromBackdrop($event)"
+    (close)="selectedPost.set(null)"
+  >
+    @if (selectedPost(); as post) {
+      <article class="post-detail">
+        <div class="post-detail-toolbar">
+          <span>Postovi / cijeli post</span>
+          <button type="button" (click)="closePost()" aria-label="Zatvori post">
+            <span>Zatvori</span>
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        <div class="post-detail-layout" [class.without-image]="!post.imageDataUrls.length">
+          @if (post.imageDataUrls.length) {
+            <div class="post-detail-gallery">
+              @for (imageDataUrl of post.imageDataUrls; track $index; let imageIndex = $index) {
+                <figure>
+                  <img
+                    [src]="imageDataUrl"
+                    [alt]="'Slika ' + (imageIndex + 1) + ' za ' + post.title"
+                  />
+                  @if (post.imageDataUrls.length > 1) {
+                    <figcaption>
+                      {{ (imageIndex + 1).toString().padStart(2, '0') }} /
+                      {{ post.imageDataUrls.length.toString().padStart(2, '0') }}
+                    </figcaption>
+                  }
+                </figure>
+              }
+            </div>
+          } @else {
+            <div
+              class="post-detail-placeholder"
+              [class]="'post-detail-placeholder ' + post.accent"
+              aria-hidden="true"
+            >
+            </div>
+          }
+
+          <div class="post-detail-content">
+            <div class="post-detail-meta">
+              <span>{{ post.publishedAt | date: 'dd.MM.yyyy.' }}</span>
+              <span>{{ post.readingTime }} min čitanja</span>
+            </div>
+            <h2 id="post-dialog-title">{{ post.title }}</h2>
+            <p>{{ post.excerpt }}</p>
+            <div class="post-detail-end" aria-hidden="true">✦</div>
+          </div>
+        </div>
+      </article>
+    }
+  </dialog>
+
+  <footer>
+    <span>Vito Prpić 2026.</span>
+  </footer>

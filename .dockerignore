@@ -1,0 +1,14 @@
+.git
+.vs
+.vscode
+.angular
+node_modules
+dist
+tmp
+out-tsc
+backend/**/bin
+backend/**/obj
+database/*.db
+database/*.db-shm
+database/*.db-wal
+*.log

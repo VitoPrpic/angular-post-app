@@ -6,8 +6,8 @@
 .site-header {
   align-items: center;
   border-bottom: 1px solid var(--line);
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   margin: 0 auto;
   max-width: 1440px;
   padding: 1.25rem clamp(1.25rem, 5vw, 5rem);
@@ -21,6 +21,49 @@
 .live-clock {
   display: flex;
   flex-direction: column;
+  justify-self: start;
+}
+
+.main-nav {
+  align-items: center;
+  display: flex;
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  justify-self: center;
+}
+
+.main-nav a {
+  color: var(--soft-ink);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  padding: 0.35rem 0;
+  position: relative;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 180ms ease;
+}
+
+.main-nav a::after {
+  background: var(--accent);
+  bottom: 0;
+  content: '';
+  height: 1px;
+  left: 0;
+  position: absolute;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 180ms ease;
+  width: 100%;
+}
+
+.main-nav a:hover {
+  color: var(--ink);
+}
+
+.main-nav a:hover::after,
+.main-nav a:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left;
 }
 
 .live-clock span {
@@ -46,6 +89,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   padding-bottom: 0.22rem;
+  justify-self: end;
   text-transform: uppercase;
 }
 
@@ -410,9 +454,33 @@ textarea::placeholder {
 
 .add-button:focus-visible,
 .header-link:focus-visible,
+.main-nav a:focus-visible,
 .empty-state a:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--accent), transparent 55%);
   outline-offset: 4px;
+}
+
+.about-section {
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(160px, 0.55fr) minmax(0, 1.45fr);
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: clamp(4rem, 8vw, 7rem) clamp(1.25rem, 7.5vw, 7.5rem);
+  scroll-margin-top: 1rem;
+}
+
+.about-content {
+  max-width: 720px;
+}
+
+.about-content p {
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: clamp(1.15rem, 2.4vw, 1.65rem);
+  line-height: 1.65;
+  margin: 1.75rem 0 0;
 }
 
 .button-icon {
@@ -585,7 +653,6 @@ textarea::placeholder {
 
 .post-detail-gallery img {
   display: block;
-  height: 100%;
   object-fit: cover;
   width: 100%;
 }
@@ -600,26 +667,6 @@ textarea::placeholder {
   padding: 0.55rem 0.7rem;
   position: absolute;
   right: 1rem;
-}
-
-.post-detail-placeholder {
-  align-items: flex-start;
-  display: flex;
-  font-family: var(--serif);
-  font-size: clamp(2rem, 5vw, 4rem);
-  justify-content: space-between;
-  padding: clamp(2rem, 5vw, 4rem);
-}
-
-.post-detail-placeholder span:first-child {
-  align-items: center;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  display: inline-flex;
-  font-size: 0.55em;
-  height: 4.5rem;
-  justify-content: center;
-  width: 4.5rem;
 }
 
 .post-detail-placeholder.coral {
@@ -678,14 +725,6 @@ textarea::placeholder {
   white-space: pre-wrap;
 }
 
-.post-detail-content p::first-letter {
-  color: var(--accent);
-  float: left;
-  font-size: 3.6em;
-  line-height: 0.75;
-  padding: 0.16em 0.12em 0 0;
-}
-
 .post-detail-end {
   color: var(--accent);
   font-size: 1.15rem;
@@ -742,6 +781,30 @@ footer span:first-child {
 }
 
 @media (max-width: 680px) {
+  .site-header {
+    gap: 1rem;
+    grid-template-columns: 1fr auto;
+  }
+
+  .live-clock {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .header-link {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .main-nav {
+    border-top: 1px solid var(--line);
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: stretch;
+    justify-content: center;
+    padding-top: 1rem;
+  }
+
   .intro {
     padding-top: 4rem;
   }
@@ -761,6 +824,12 @@ footer span:first-child {
 
   .posts-grid {
     grid-template-columns: 1fr;
+  }
+
+  .about-section {
+    gap: 1rem;
+    grid-template-columns: 1fr;
+    padding: 4rem 1.25rem;
   }
 
   .post-dialog {

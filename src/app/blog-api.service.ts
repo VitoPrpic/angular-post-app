@@ -29,7 +29,7 @@ interface AdminUser {
 @Injectable({ providedIn: 'root' })
 export class BlogApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://127.0.0.1:5180/api';
+  private readonly apiUrl = '/api';
 
   getPosts(): Observable<ApiPost[]> {
     return this.http.get<ApiPost[]>(`${this.apiUrl}/posts`);

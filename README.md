@@ -39,3 +39,21 @@ SQL shema za `AdminUsers`, `Posts` i `Categories` nalazi se u
 [`database/schema.sql`](database/schema.sql).
 
 ASP.NET Core API sa Swaggerom nalazi se u [`backend/BlogApi`](backend/BlogApi).
+
+## Railway objava
+
+Projekt se na Railwayu gradi iz korijenskog `Dockerfile`a. Angular i API rade na
+istoj domeni, a Angular šalje zahtjeve na `/api`.
+
+1. Prenesi cijeli projekt u GitHub repozitorij.
+2. U Railwayu odaberi **GitHub Repository** i taj repozitorij.
+3. Na Railway servisu dodaj **Volume** i postavi mount path na `/data`.
+4. Kao health check path postavi `/health`.
+5. U **Networking** odaberi **Generate Domain**.
+
+Railway sam postavlja `PORT`, a aplikacija SQLite bazu automatski sprema u
+`RAILWAY_VOLUME_MOUNT_PATH`, odnosno u priključeni Volume. Bez Volumea će se
+podaci izgubiti nakon novog deploya.
+
+> Prije javne objave treba dodati prijavu/autorizaciju jer su trenutačno API
+> rute za dodavanje, uređivanje i brisanje postova javno dostupne.
