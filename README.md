@@ -55,5 +55,8 @@ Railway sam postavlja `PORT`, a aplikacija SQLite bazu automatski sprema u
 `RAILWAY_VOLUME_MOUNT_PATH`, odnosno u priključeni Volume. Bez Volumea će se
 podaci izgubiti nakon novog deploya.
 
+**UPDATE**
+STRANICA NA www.vitoprpic.blog
+
 > Prije javne objave treba dodati prijavu/autorizaciju jer su trenutačno API
 > rute za dodavanje, uređivanje i brisanje postova javno dostupne.
