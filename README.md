@@ -13,8 +13,12 @@ Railway sam postavlja `PORT`, a aplikacija SQLite bazu automatski sprema u
 `RAILWAY_VOLUME_MOUNT_PATH`, odnosno u priključeni Volume. Bez Volumea će se
 podaci izgubiti nakon novog deploya.
 
+Za dodavanje, uređivanje ili brisanje posta na Railwayu treba postaviti varijablu
+`ApiKey`. Ključ se upisuje u polje **Admin API ključ** i čuva samo u trenutnoj
+kartici preglednika.
+
 **STRANICA NA**
 www.vitoprpic.blog
 
-> Prije javne objave treba dodati prijavu/autorizaciju jer su trenutačno API
-> rute za dodavanje, uređivanje i brisanje postova javno dostupne.
+> Čitanje postova je javno, dok su dodavanje, uređivanje i brisanje zaštićeni
+> API ključem.

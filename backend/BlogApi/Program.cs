@@ -2,6 +2,7 @@ using BlogApi.Data;
 using BlogApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,20 @@ builder.Services.AddDbContext<BlogDbContext>(options => options.UseSqlite(connec
 builder.Services.AddScoped<IPasswordHasher<AdminUser>, PasswordHasher<AdminUser>>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+  options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+  {
+    Description = "Upiši API ključ. Vrijednost se šalje u Authorization zaglavlju.",
+    In = ParameterLocation.Header,
+    Name = "Authorization",
+    Type = SecuritySchemeType.ApiKey
+  });
+  options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+  {
+    [new OpenApiSecuritySchemeReference("ApiKey", document, null)] = []
+  });
+});
 builder.Services.AddCors(options =>
 {
   options.AddPolicy("AngularApp", policy =>

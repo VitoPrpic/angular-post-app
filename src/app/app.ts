@@ -43,6 +43,7 @@ export class App implements OnInit {
   protected readonly isSaving = signal(false);
   protected readonly pendingDeleteId = signal<number | null>(null);
   protected readonly editingPostId = signal<number | null>(null);
+  protected apiKey = this.readApiKey();
 
   private readonly ownerId = signal<number | null>(null);
 
@@ -62,12 +63,7 @@ export class App implements OnInit {
     this.errorMessage.set('');
 
     try {
-      const [owner, apiPosts] = await Promise.all([
-        firstValueFrom(this.api.ensureOwner()),
-        firstValueFrom(this.api.getPosts()),
-      ]);
-
-      this.ownerId.set(owner.id);
+      const apiPosts = await firstValueFrom(this.api.getPosts());
       this.posts.set(apiPosts.map((post) => this.toPost(post)));
     } catch (error) {
       this.errorMessage.set(
@@ -84,7 +80,7 @@ export class App implements OnInit {
   protected async savePost(): Promise<void> {
     const title = this.draft.title.trim();
     const excerpt = this.draft.excerpt.trim();
-    const ownerId = this.ownerId();
+    const apiKey = this.apiKey.trim();
 
     if (!title || !excerpt) {
       this.errorMessage.set('Upiši naslov i tekst posta.');
@@ -92,29 +88,38 @@ export class App implements OnInit {
       return;
     }
 
-    if (ownerId === null) {
-      this.errorMessage.set('Veza s bazom još nije spremna. Pokušaj ponovno.');
+    if (!apiKey) {
+      this.errorMessage.set('Upiši administratorski API ključ.');
+      this.successMessage.set('');
       return;
     }
 
     const editingId = this.editingPostId();
     const existingPost = this.posts().find((post) => post.id === editingId);
-    const request: SavePostRequest = {
-      adminUserId: existingPost?.adminUserId ?? ownerId,
-      categoryId: existingPost?.categoryId ?? null,
-      title,
-      content: excerpt,
-      imageUrls: [...this.draft.imageDataUrls],
-    };
 
     this.isSaving.set(true);
     this.clearMessage();
 
     try {
+      let ownerId = existingPost?.adminUserId ?? this.ownerId();
+
+      if (ownerId === null) {
+        const owner = await firstValueFrom(this.api.ensureOwner(apiKey));
+        ownerId = owner.id;
+        this.ownerId.set(owner.id);
+      }
+
+      const request: SavePostRequest = {
+        adminUserId: ownerId,
+        categoryId: existingPost?.categoryId ?? null,
+        title,
+        content: excerpt,
+        imageUrls: [...this.draft.imageDataUrls],
+      };
       const savedPost =
         editingId === null
-          ? await firstValueFrom(this.api.createPost(request))
-          : await firstValueFrom(this.api.updatePost(editingId, request));
+          ? await firstValueFrom(this.api.createPost(request, apiKey))
+          : await firstValueFrom(this.api.updatePost(editingId, request, apiKey));
       const post = this.toPost(savedPost);
 
       if (editingId === null) {
@@ -139,11 +144,18 @@ export class App implements OnInit {
   }
 
   protected async removePost(id: number): Promise<void> {
+    const apiKey = this.apiKey.trim();
+    if (!apiKey) {
+      this.errorMessage.set('Upiši administratorski API ključ prije brisanja posta.');
+      this.successMessage.set('');
+      return;
+    }
+
     this.pendingDeleteId.set(id);
     this.clearMessage();
 
     try {
-      await firstValueFrom(this.api.deletePost(id));
+      await firstValueFrom(this.api.deletePost(id, apiKey));
       this.posts.update((posts) => posts.filter((post) => post.id !== id));
 
       if (this.editingPostId() === id) {
@@ -261,6 +273,22 @@ export class App implements OnInit {
     this.successMessage.set('');
   }
 
+  protected setApiKey(value: string): void {
+    this.apiKey = value;
+    this.ownerId.set(null);
+    this.clearMessage();
+
+    try {
+      if (value.trim()) {
+        globalThis.sessionStorage?.setItem('blog-api-key', value);
+      } else {
+        globalThis.sessionStorage?.removeItem('blog-api-key');
+      }
+    } catch {
+      // Aplikacija i dalje radi ako preglednik blokira sessionStorage.
+    }
+  }
+
   private resetComposer(): void {
     this.editingPostId.set(null);
     this.draft = this.emptyDraft();
@@ -276,6 +304,14 @@ export class App implements OnInit {
       excerpt: '',
       imageDataUrls: [],
     };
+  }
+
+  private readApiKey(): string {
+    try {
+      return globalThis.sessionStorage?.getItem('blog-api-key') ?? '';
+    } catch {
+      return '';
+    }
   }
 
   private toPost(post: ApiPost): Post {

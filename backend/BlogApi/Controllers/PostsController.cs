@@ -1,4 +1,5 @@
 using System.Text.Json;
+using BlogApi.Authentication;
 using BlogApi.Data;
 using BlogApi.Dtos;
 using BlogApi.Models;
@@ -30,6 +31,7 @@ public sealed class PostsController(BlogDbContext database) : ControllerBase
   }
 
   [HttpPost]
+  [ApiKeyAuth]
   public async Task<ActionResult<PostResponse>> Create(CreatePostRequest request)
   {
     var validationError = await ValidateRequest(
@@ -61,6 +63,7 @@ public sealed class PostsController(BlogDbContext database) : ControllerBase
   }
 
   [HttpPut("{id:int}")]
+  [ApiKeyAuth]
   public async Task<ActionResult<PostResponse>> Update(int id, UpdatePostRequest request)
   {
     var post = await database.Posts.FindAsync(id);
@@ -92,6 +95,7 @@ public sealed class PostsController(BlogDbContext database) : ControllerBase
   }
 
   [HttpDelete("{id:int}")]
+  [ApiKeyAuth]
   public async Task<IActionResult> Delete(int id)
   {
     var post = await database.Posts.FindAsync(id);

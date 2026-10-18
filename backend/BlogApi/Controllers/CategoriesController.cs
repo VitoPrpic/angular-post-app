@@ -1,3 +1,4 @@
+using BlogApi.Authentication;
 using BlogApi.Data;
 using BlogApi.Dtos;
 using BlogApi.Models;
@@ -23,6 +24,7 @@ public sealed class CategoriesController(BlogDbContext database) : ControllerBas
   }
 
   [HttpPost]
+  [ApiKeyAuth]
   public async Task<ActionResult<CategoryResponse>> Create(CreateCategoryRequest request)
   {
     if (string.IsNullOrWhiteSpace(request.Name))

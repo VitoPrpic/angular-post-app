@@ -25,6 +25,20 @@
         </div>
 
         <form (ngSubmit)="savePost()" novalidate>
+          <label for="api-key">Admin API ključ</label>
+          <input
+            id="api-key"
+            name="apiKey"
+            type="password"
+            autocomplete="off"
+            placeholder="Upiši ključ za spremanje i brisanje"
+            [ngModel]="apiKey"
+            (ngModelChange)="setApiKey($event)"
+          />
+          <div class="field-meta">
+            <span>Čuva se samo u ovoj kartici preglednika</span>
+          </div>
+
           <label for="post-title">Naslov</label>
           <input
             id="post-title"

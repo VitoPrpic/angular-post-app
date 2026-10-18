@@ -1,3 +1,4 @@
+using BlogApi.Authentication;
 using BlogApi.Data;
 using BlogApi.Dtos;
 using BlogApi.Models;
@@ -9,6 +10,7 @@ namespace BlogApi.Controllers;
 
 [ApiController]
 [Route("api/admin-users")]
+[ApiKeyAuth]
 public sealed class AdminUsersController(
     BlogDbContext database,
     IPasswordHasher<AdminUser> passwordHasher) : ControllerBase
