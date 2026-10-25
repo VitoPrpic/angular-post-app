@@ -1,5 +1,21 @@
 # Blog API (.NET + Swagger)
 
+Backend je podijeljen u četiri projekta:
+
+- `BlogApi` - API kontroleri, API-key zaštita, Swagger i pokretanje
+- `BlogApi.Application` - poslovna pravila, DTO modeli i servisi
+- `BlogApi.Domain` - domenski modeli i sučelja repozitorija
+- `BlogApi.Data` - Entity Framework, SQLite i implementacije repozitorija
+
+Tok jednog zahtjeva:
+
+```text
+Controller -> Application service -> Repository -> DbContext -> SQLite
+```
+
+`Program.cs` u projektu `BlogApi` obavlja posao koji je u starijim .NET
+projektima bio podijeljen između `Program.cs` i `Startup.cs`.
+
 API koristi SQLite bazu iz `database/blog.db` i automatski je stvara pri prvom
 pokretanju.
 
@@ -7,6 +23,12 @@ pokretanju.
 
 ```bash
 dotnet run
+```
+
+Cijelo backend rješenje može se izgraditi iz mape `backend`:
+
+```bash
+dotnet build BlogApi.sln
 ```
 
 Swagger se otvara na `http://localhost:5180/swagger`.

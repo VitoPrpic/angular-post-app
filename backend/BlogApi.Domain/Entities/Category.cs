@@ -1,4 +1,4 @@
-namespace BlogApi.Models;
+namespace BlogApi.Domain.Entities;
 
 public sealed class Category
 {

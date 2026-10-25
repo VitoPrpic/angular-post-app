@@ -1,4 +1,4 @@
-namespace BlogApi.Dtos;
+namespace BlogApi.Application.Dtos;
 
 public sealed record CreateAdminUserRequest(string Username, string Email, string Password);
 

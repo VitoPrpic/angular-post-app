@@ -19,9 +19,12 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend-build
 WORKDIR /src
 
 COPY backend/BlogApi/BlogApi.csproj backend/BlogApi/
+COPY backend/BlogApi.Application/BlogApi.Application.csproj backend/BlogApi.Application/
+COPY backend/BlogApi.Data/BlogApi.Data.csproj backend/BlogApi.Data/
+COPY backend/BlogApi.Domain/BlogApi.Domain.csproj backend/BlogApi.Domain/
 RUN dotnet restore backend/BlogApi/BlogApi.csproj
 
-COPY backend/BlogApi/ backend/BlogApi/
+COPY backend/ ./backend/
 RUN dotnet publish backend/BlogApi/BlogApi.csproj \
     --configuration Release \
     --output /app/publish \

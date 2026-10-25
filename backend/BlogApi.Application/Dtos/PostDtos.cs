@@ -1,20 +1,18 @@
-namespace BlogApi.Dtos;
+namespace BlogApi.Application.Dtos;
 
 public sealed record CreatePostRequest(
     int AdminUserId,
     int? CategoryId,
     string Title,
     string Content,
-    List<string>? ImageUrls
-);
+    List<string>? ImageUrls);
 
 public sealed record UpdatePostRequest(
     int AdminUserId,
     int? CategoryId,
     string Title,
     string Content,
-    List<string>? ImageUrls
-);
+    List<string>? ImageUrls);
 
 public sealed record PostResponse(
     int Id,
@@ -23,5 +21,4 @@ public sealed record PostResponse(
     string Title,
     string Content,
     List<string> ImageUrls,
-    DateTime CreatedAt
-);
+    DateTime CreatedAt);

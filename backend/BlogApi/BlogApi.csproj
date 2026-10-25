@@ -5,7 +5,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BlogApi.Application\BlogApi.Application.csproj" />
+    <ProjectReference Include="..\BlogApi.Data\BlogApi.Data.csproj" />
   </ItemGroup>
 </Project>

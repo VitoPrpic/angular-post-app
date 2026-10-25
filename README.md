@@ -4,6 +4,9 @@ Jednostavna Angular aplikacija u kojoj se postovi dodaju kroz obrazac i prikazuj
 kao responzivne kartice. Postovi se spremaju kroz ASP.NET Core API u SQLite bazu i
 ostaju dostupni nakon osvježavanja stranice.
 
+Backend koristi odvojene `API`, `Application`, `Domain` i `Data` projekte, kao
+višeslojna poslovna aplikacija. Rješenje se nalazi u `backend/BlogApi.sln`.
+
 ## Railway objava
 
 Projekt se na Railwayu gradi iz korijenskog `Dockerfile`a. Angular i API rade na

@@ -1,4 +1,4 @@
-namespace BlogApi.Dtos;
+namespace BlogApi.Application.Dtos;
 
 public sealed record CreateCategoryRequest(string Name);
 

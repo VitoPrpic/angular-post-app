@@ -1,7 +1,7 @@
-using BlogApi.Data;
-using BlogApi.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using BlogApi.Application.DependencyInjection;
+using BlogApi.Data.DependencyInjection;
+using BlogApi.Data.Persistence;
+using BlogApi.Middleware;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,8 +26,8 @@ if (string.IsNullOrWhiteSpace(connectionString))
   connectionString = $"Data Source={defaultDatabasePath};Foreign Keys=True";
 }
 
-builder.Services.AddDbContext<BlogDbContext>(options => options.UseSqlite(connectionString));
-builder.Services.AddScoped<IPasswordHasher<AdminUser>, PasswordHasher<AdminUser>>();
+builder.Services.AddApplicationLayer();
+builder.Services.AddDataLayer(connectionString);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -71,6 +71,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AngularApp");
+app.UseMiddleware<ApiExceptionMiddleware>();
 
 var indexFile = Path.Combine(app.Environment.WebRootPath ?? "wwwroot", "index.html");
 if (File.Exists(indexFile))
